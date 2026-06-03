@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Chấm Công & Thủ Thuật</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- SheetJS cho xử lý Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Boxicons cho icons -->
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast">Đã lưu dữ liệu thành công</div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p>Đang xử lý...</p>
+  </div>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <img src="logo-chuan-chinh.png" alt="Logo" style="height: 36px; width: auto; object-fit: contain;">
+          <h2>MedManager</h2>
+        </div>
+      </div>
+
+      <ul class="nav-links">
+        <li class="active" data-tab="tab-chamcong">
+          <i class='bx bx-calendar-check'></i>
+          <span>Bảng Chấm Công</span>
+        </li>
+        <li data-tab="tab-thuthuat">
+          <i class='bx bx-upload'></i>
+          <span>Tải File Thủ Thuật</span>
+        </li>
+        <li data-tab="tab-thongke">
+          <i class='bx bx-bar-chart-alt-2'></i>
+          <span>Thống Kê Tổng Hợp</span>
+        </li>
+        <li data-tab="tab-nhanvien">
+          <i class='bx bx-user-pin'></i>
+          <span>Danh Sách Nhân Viên</span>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <p>Khoa Y Học Cổ Truyền - Phục Hồi Chức Năng &copy; 2026</p>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="top-header">
+        <h1 id="page-title">Bảng Chấm Công</h1>
+        <div class="date-selector">
+          <label for="month-year-picker">Chọn Tháng:</label>
+          <input type="month" id="month-year-picker">
+        </div>
+      </header>
+
+      <!-- TAB: Chấm Công -->
+      <section id="tab-chamcong" class="tab-pane active">
+        <div class="card">
+          <div class="card-header">
+            <h3>Chi tiết chấm công tháng</h3>
+            <div class="actions">
+              <span class="status-indicator" id="sync-status">Đã đồng bộ</span>
+            </div>
+          </div>
+          <div class="table-container">
+            <table id="table-chamcong" class="data-table">
+              <thead>
+                <tr id="chamcong-header">
+                  <!-- Header sẽ được gen bằng JS -->
+                </tr>
+              </thead>
+              <tbody id="chamcong-body">
+                <!-- Body sẽ được gen bằng JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: Tải Thủ Thuật -->
+      <section id="tab-thuthuat" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>Tải lên dữ liệu thủ thuật</h3>
+          </div>
+          <div class="card-body">
+            <div class="upload-area" id="upload-area">
+              <i class='bx bx-cloud-upload upload-icon'></i>
+              <p>Kéo thả file Excel vào đây hoặc click để chọn file</p>
+              <input type="file" id="excel-file-input" accept=".xlsx, .xls" hidden>
+              <button class="btn btn-primary" onclick="document.getElementById('excel-file-input').click()">Chọn File
+                Excel</button>
+            </div>
+
+            <div id="preview-section" class="hidden">
+              <div class="preview-header">
+                <h4>Xem trước dữ liệu</h4>
+                <button class="btn btn-success" id="btn-submit-thuthuat">
+                  <i class='bx bx-cloud-upload'></i> Xác nhận gửi lên bộ nhớ
+                </button>
+              </div>
+              <div class="table-container">
+                <table id="table-preview-thuthuat" class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Tên nhân viên</th>
+                      <th>Thủ thuật loại 1</th>
+                      <th>Thủ thuật loại 2</th>
+                      <th>Thủ thuật loại 3</th>
+                    </tr>
+                  </thead>
+                  <tbody id="preview-thuthuat-body">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: Thống Kê -->
+      <section id="tab-thongke" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>Báo Cáo Tổng Hợp Tháng</h3>
+            <button class="btn btn-primary" id="btn-export-excel">
+              <i class='bx bx-export'></i> Xuất Báo Cáo
+            </button>
+          </div>
+          <div class="table-container">
+            <table id="table-thongke" class="data-table">
+              <thead>
+                <tr>
+                  <th>Tên nhân viên</th>
+                  <th>Tổng số công</th>
+                  <th>Thủ thuật loại 1</th>
+                  <th>Thủ thuật loại 2</th>
+                  <th>Thủ thuật loại 3</th>
+                </tr>
+              </thead>
+              <tbody id="thongke-body">
+                <!-- Data gen by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: Nhân viên -->
+      <section id="tab-nhanvien" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>Danh sách nhân viên</h3>
+            <div class="actions">
+              <input type="text" id="new-employee-name" placeholder="Tên nhân viên mới..." class="input-field">
+              <button class="btn btn-primary" id="btn-add-employee">Thêm</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Tên Nhân Viên</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="nhanvien-body">
+              </tbody>
+            </table>
+          </div>
+          <p class="note">* Danh sách này dùng chung cho toàn bộ ứng dụng và sẽ được lưu tự động cục bộ.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

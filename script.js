@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initExcelUploader();
   initExportExcel();
   initModal();
+  initEditModal();
 });
 
 // --- UI & TAB QUẢN LÝ ---
@@ -159,6 +160,72 @@ function removeEmployee(index) {
   });
 }
 
+let editIndex = -1;
+
+function editEmployee(index) {
+  editIndex = index;
+  document.getElementById('edit-employee-name').value = employees[index];
+  document.getElementById('edit-modal').classList.add('show');
+  setTimeout(() => document.getElementById('edit-employee-name').focus(), 100);
+}
+
+function initEditModal() {
+  const modal = document.getElementById('edit-modal');
+  const input = document.getElementById('edit-employee-name');
+  
+  document.getElementById('btn-edit-cancel').addEventListener('click', () => {
+    modal.classList.remove('show');
+  });
+  
+  document.getElementById('btn-edit-save').addEventListener('click', () => {
+    saveEdit();
+  });
+  
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') saveEdit();
+  });
+  
+  function saveEdit() {
+    const newName = input.value.trim();
+    if (!newName) {
+      alert("Tên không được để trống!");
+      return;
+    }
+    
+    if (newName === employees[editIndex]) {
+      modal.classList.remove('show');
+      return;
+    }
+    
+    if (employees.includes(newName)) {
+      alert("Tên nhân viên đã tồn tại!");
+      return;
+    }
+    
+    const oldName = employees[editIndex];
+    employees[editIndex] = newName;
+    
+    // Migrate data
+    if (chamCongData[oldName]) {
+      chamCongData[newName] = chamCongData[oldName];
+      delete chamCongData[oldName];
+      triggerAutoSaveChamCong();
+    }
+    
+    if (thuThuatData[oldName]) {
+      thuThuatData[newName] = thuThuatData[oldName];
+      delete thuThuatData[oldName];
+      saveThuThuatToServer();
+    }
+    
+    saveEmployeesLocally();
+    renderEmployeesTable();
+    renderChamCongTable();
+    
+    modal.classList.remove('show');
+  }
+}
+
 function renderEmployeesTable() {
   const tbody = document.getElementById('nhanvien-body');
   tbody.innerHTML = '';
@@ -167,7 +234,10 @@ function renderEmployeesTable() {
     tr.innerHTML = `
       <td>${index + 1}</td>
       <td><strong>${emp}</strong></td>
-      <td>
+      <td style="display: flex; gap: 8px;">
+        <button class="btn btn-primary" style="padding: 6px 12px;" onclick="editEmployee(${index})">
+          <i class='bx bx-edit'></i> Sửa
+        </button>
         <button class="btn btn-danger" onclick="removeEmployee(${index})">
           <i class='bx bx-trash'></i> Xóa
         </button>

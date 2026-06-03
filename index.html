@@ -31,6 +31,24 @@
     <p>Đang xử lý...</p>
   </div>
 
+  <!-- Edit Employee Modal -->
+  <div id="edit-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <i class='bx bx-edit' style="color: var(--primary-color);"></i>
+        <h3>Sửa tên nhân viên</h3>
+      </div>
+      <div class="modal-body">
+        <label for="edit-employee-name" style="display: block; margin-bottom: 8px; font-weight: 500;">Tên nhân viên mới:</label>
+        <input type="text" id="edit-employee-name" class="input-field" style="width: 100%;">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-edit-cancel">Hủy</button>
+        <button class="btn btn-primary" id="btn-edit-save">Lưu thay đổi</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Custom Confirm Modal -->
   <div id="confirm-modal" class="modal-overlay">
     <div class="modal-content">

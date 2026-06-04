@@ -360,6 +360,11 @@ function initExcelUploader() {
 function processExcelData(dataRows) {
   thuThuatData = {}; // Reset data mới
 
+  // Khởi tạo sẵn tất cả nhân viên với số 0 để bảng luôn hiển thị đủ người
+  employees.forEach(emp => {
+    thuThuatData[emp] = { loai1: 0, loai2: 0, loai3: 0, khac: 0 };
+  });
+
   // Duyệt qua toàn bộ các dòng, an toàn 100%
   for (let i = 0; i < dataRows.length; i++) {
     const row = dataRows[i];
@@ -367,29 +372,29 @@ function processExcelData(dataRows) {
 
     // Đọc đích danh từ cột AN và AT
     const loaiTT = row['AN'];
-    let empName = row['AT'];
+    let rawEmpName = row['AT'];
 
-    if (!empName) continue;
-    empName = String(empName).trim();
-    if (!empName) continue;
+    if (!rawEmpName) continue;
+    rawEmpName = String(rawEmpName).trim();
+    if (!rawEmpName) continue;
     
-    // CHỈ lấy nhân viên ĐÃ CÓ trong danh sách quản lý (Bỏ qua rác, header, tên lạ)
-    if (!employees.includes(empName)) continue;
+    // Tìm nhân viên trong danh sách (không phân biệt hoa thường)
+    const matchedEmp = employees.find(e => e.toLowerCase() === rawEmpName.toLowerCase());
+    
+    // CHỈ lấy nhân viên ĐÃ CÓ trong danh sách quản lý
+    if (!matchedEmp) continue;
 
-    if (!thuThuatData[empName]) {
-      thuThuatData[empName] = { loai1: 0, loai2: 0, loai3: 0, khac: 0 };
-    }
-
+    // Sử dụng tên chuẩn từ danh sách (matchedEmp)
     if (loaiTT) {
       const strLoai = String(loaiTT).toLowerCase();
       if (strLoai.includes('loại 1')) {
-        thuThuatData[empName].loai1++;
+        thuThuatData[matchedEmp].loai1++;
       } else if (strLoai.includes('loại 2')) {
-        thuThuatData[empName].loai2++;
+        thuThuatData[matchedEmp].loai2++;
       } else if (strLoai.includes('loại 3')) {
-        thuThuatData[empName].loai3++;
+        thuThuatData[matchedEmp].loai3++;
       } else {
-        thuThuatData[empName].khac++;
+        thuThuatData[matchedEmp].khac++;
       }
     }
   }

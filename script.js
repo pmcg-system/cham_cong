@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initTabs() {
   const links = document.querySelectorAll('.nav-links li');
   const panes = document.querySelectorAll('.tab-pane');
+  const dateSelector = document.querySelector('.date-selector');
 
   links.forEach(link => {
     link.addEventListener('click', () => {
@@ -45,6 +46,13 @@ function initTabs() {
 
       // Đổi title
       document.getElementById('page-title').innerText = link.querySelector('span').innerText;
+
+      // Ẩn/hiện bộ chọn tháng tùy tab
+      if (tabId === 'tab-kiemtra' || tabId === 'tab-nhanvien') {
+        dateSelector.style.display = 'none';
+      } else {
+        dateSelector.style.display = '';
+      }
 
       if (tabId === 'tab-thongke') {
         renderThongKeTable();

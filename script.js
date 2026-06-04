@@ -373,8 +373,8 @@ function processExcelData(dataRows) {
     empName = String(empName).trim();
     if (!empName) continue;
     
-    // Bỏ qua dòng tiêu đề nếu vô tình bị lẫn vào
-    if (empName.toLowerCase().includes('thủ thuật viên') || empName.toLowerCase().includes('tên nhân viên')) continue;
+    // CHỈ lấy nhân viên ĐÃ CÓ trong danh sách quản lý (Bỏ qua rác, header, tên lạ)
+    if (!employees.includes(empName)) continue;
 
     if (!thuThuatData[empName]) {
       thuThuatData[empName] = { loai1: 0, loai2: 0, loai3: 0, khac: 0 };
@@ -393,14 +393,6 @@ function processExcelData(dataRows) {
       }
     }
   }
-
-  // Tự động thêm nhân viên vào danh sách nếu chưa có
-  Object.keys(thuThuatData).forEach(empName => {
-    if (!employees.includes(empName)) {
-      employees.push(empName);
-      saveEmployeesLocally();
-    }
-  });
 
   // Render preview
   const tbody = document.getElementById('preview-thuthuat-body');

@@ -378,15 +378,21 @@ function processExcelData(dataRows) {
     rawEmpName = String(rawEmpName).trim();
     if (!rawEmpName) continue;
     
+    // Chuẩn hóa Unicode NFC để tránh lỗi font chữ tiếng Việt (tổ hợp vs dựng sẵn)
+    const rawEmpNameNormalized = rawEmpName.normalize('NFC').toLowerCase();
+
+    // Bỏ qua dòng tiêu đề
+    if (rawEmpNameNormalized.includes('thủ thuật viên') || rawEmpNameNormalized.includes('tên nhân viên')) continue;
+
     // Tìm nhân viên trong danh sách (không phân biệt hoa thường)
-    const matchedEmp = employees.find(e => e.toLowerCase() === rawEmpName.toLowerCase());
+    const matchedEmp = employees.find(e => e.normalize('NFC').toLowerCase() === rawEmpNameNormalized);
     
     // CHỈ lấy nhân viên ĐÃ CÓ trong danh sách quản lý
     if (!matchedEmp) continue;
 
     // Sử dụng tên chuẩn từ danh sách (matchedEmp)
     if (loaiTT) {
-      const strLoai = String(loaiTT).toLowerCase();
+      const strLoai = String(loaiTT).normalize('NFC').toLowerCase();
       if (strLoai.includes('loại 1')) {
         thuThuatData[matchedEmp].loai1++;
       } else if (strLoai.includes('loại 2')) {

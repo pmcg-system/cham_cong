@@ -16,6 +16,7 @@ let saveTimeout = null;
 document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initMonthYearPicker();
+  initThongKeMode();
   renderEmployeesTable();
   initEmployeeManager();
   initExcelUploader();
@@ -62,20 +63,36 @@ function initTabs() {
 }
 
 function initMonthYearPicker() {
-  const picker = document.getElementById('month-year-picker');
+  const mPicker = document.getElementById('month-picker');
+  const yPicker = document.getElementById('year-picker');
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
 
-  currentMonthYear = `${year}-${month}`;
-  picker.value = currentMonthYear;
+  mPicker.value = now.getMonth() + 1;
+  yPicker.value = now.getFullYear();
 
-  fetchDataFromServer(); // Fetch dữ liệu lần đầu
+  const updateCurrentMonthYear = () => {
+    let m = parseInt(mPicker.value);
+    let y = parseInt(yPicker.value);
 
-  picker.addEventListener('change', (e) => {
-    currentMonthYear = e.target.value;
-    fetchDataFromServer();
-  });
+    // Xử lý khi tăng/giảm qua giới hạn tháng
+    if (m > 12) { m = 1; y++; mPicker.value = 1; yPicker.value = y; }
+    if (m < 1) { m = 12; y--; mPicker.value = 12; yPicker.value = y; }
+
+    const monthStr = String(m).padStart(2, '0');
+    currentMonthYear = `${y}-${monthStr}`;
+    
+    // Nếu đang ở mode xem Quý thì load lại Quý (vì năm có thể đổi), ngược lại load tháng
+    if (typeof thongKeMode !== 'undefined' && thongKeMode !== 'current') {
+      fetchQuarterData(thongKeMode);
+    } else {
+      fetchDataFromServer();
+    }
+  };
+
+  mPicker.addEventListener('change', updateCurrentMonthYear);
+  yPicker.addEventListener('change', updateCurrentMonthYear);
+
+  updateCurrentMonthYear(); // Fetch dữ liệu lần đầu
 }
 
 function showToast(message) {
@@ -563,43 +580,116 @@ function processExcelData(dataRows) {
 }
 
 // --- THỐNG KÊ TỔNG HỢP ---
+let thongKeMode = 'current'; // 'current', 'q1', 'q2', 'q3', 'q4'
+let thongKeQuarterData = { chamcong: {}, thuthuat: {} }; // Cache cho dữ liệu quý
+
+function initThongKeMode() {
+  const modeSelect = document.getElementById('thongke-mode');
+  if (modeSelect) {
+    modeSelect.addEventListener('change', (e) => {
+      thongKeMode = e.target.value;
+      if (thongKeMode === 'current') {
+        renderThongKeTable();
+      } else {
+        fetchQuarterData(thongKeMode);
+      }
+    });
+  }
+}
+
+function fetchQuarterData(mode) {
+  showLoading(true);
+  const year = document.getElementById('year-picker').value;
+  let months = [];
+  if (mode === 'q1') months = ['01', '02', '03'];
+  else if (mode === 'q2') months = ['04', '05', '06'];
+  else if (mode === 'q3') months = ['07', '08', '09'];
+  else if (mode === 'q4') months = ['10', '11', '12'];
+  
+  Promise.all(months.map(m => 
+    fetch(`${GAS_WEBAPP_URL}?action=get_data&monthYear=${year}-${m}`).then(res => res.json())
+  ))
+  .then(results => {
+    let mergedChamCong = {};
+    let mergedThuThuat = {};
+    
+    results.forEach(res => {
+       if(res.status === 'success') {
+          const cc = res.data.chamcong || {};
+          const tt = res.data.thuthuat || {};
+          
+          Object.keys(cc).forEach(emp => {
+             if(!mergedChamCong[emp]) mergedChamCong[emp] = 0;
+             Object.values(cc[emp]).forEach(val => {
+                if (val === 'sang' || val === 'chieu') mergedChamCong[emp] += 0.5;
+                else if (val === 'ca-ngay') mergedChamCong[emp] += 1;
+             });
+          });
+          
+          Object.keys(tt).forEach(emp => {
+             if(!mergedThuThuat[emp]) mergedThuThuat[emp] = { loai1:0, loai2:0, loai3:0, khac:0 };
+             mergedThuThuat[emp].loai1 += (tt[emp].loai1 || 0);
+             mergedThuThuat[emp].loai2 += (tt[emp].loai2 || 0);
+             mergedThuThuat[emp].loai3 += (tt[emp].loai3 || 0);
+             mergedThuThuat[emp].khac += (tt[emp].khac || 0);
+          });
+       }
+    });
+    
+    thongKeQuarterData.chamcong = mergedChamCong;
+    thongKeQuarterData.thuthuat = mergedThuThuat;
+    renderThongKeTable();
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Lỗi khi tải dữ liệu Quý");
+  })
+  .finally(() => showLoading(false));
+}
+
 function renderThongKeTable() {
   const tbody = document.getElementById('thongke-body');
+  if (!tbody) return;
   tbody.innerHTML = '';
 
   let tongCongThang = 0;
   let tongL1 = 0, tongL2 = 0, tongL3 = 0, tongKhac = 0, tongTatCa = 0;
+  
+  const isQ = (typeof thongKeMode !== 'undefined' && thongKeMode !== 'current');
+  const sourceChamCong = isQ ? thongKeQuarterData.chamcong : chamCongData;
+  const sourceThuThuat = isQ ? thongKeQuarterData.thuthuat : thuThuatData;
 
   employees.forEach(emp => {
-    // Tính tổng công
     let tongCong = 0;
-    if (chamCongData[emp]) {
-      Object.values(chamCongData[emp]).forEach(val => {
+    if (isQ) {
+      tongCong = sourceChamCong[emp] || 0;
+    } else {
+      const cc = sourceChamCong[emp] || {};
+      Object.values(cc).forEach(val => {
         if (val === 'sang' || val === 'chieu') tongCong += 0.5;
         else if (val === 'ca-ngay') tongCong += 1;
       });
     }
     tongCongThang += tongCong;
 
-    // Lấy thủ thuật
-    const stats = thuThuatData[emp] || { loai1: 0, loai2: 0, loai3: 0, khac: 0 };
-    const l1 = stats.loai1 || 0;
-    const l2 = stats.loai2 || 0;
-    const l3 = stats.loai3 || 0;
-    const khac = stats.khac || 0;
-    const total = l1 + l2 + l3 + khac;
+    const tt = sourceThuThuat[emp] || { loai1: 0, loai2: 0, loai3: 0, khac: 0 };
+    const l1 = tt.loai1 || 0;
+    const l2 = tt.loai2 || 0;
+    const l3 = tt.loai3 || 0;
+    const khac = tt.khac || 0;
+    const tongTT = l1 + l2 + l3 + khac;
 
-    tongL1 += l1; tongL2 += l2; tongL3 += l3; tongKhac += khac; tongTatCa += total;
+    tongL1 += l1; tongL2 += l2; tongL3 += l3; tongKhac += khac; tongTatCa += tongTT;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><strong>${emp}</strong></td>
-      <td class="text-center" style="color: var(--primary-color); font-weight: bold;">${tongCong}</td>
+      <td class="text-center" style="font-weight: bold; color: var(--primary-color);">${tongCong}</td>
       <td class="text-center">${l1}</td>
       <td class="text-center">${l2}</td>
       <td class="text-center">${l3}</td>
       <td class="text-center">${khac}</td>
-      <td class="text-center" style="color: var(--primary-color); font-weight: bold;">${total}</td>
+      <td class="text-center" style="font-weight: bold; color: var(--success-dark);">${tongTT}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -608,12 +698,12 @@ function renderThongKeTable() {
   trTotal.style.backgroundColor = '#f8f9fc';
   trTotal.innerHTML = `
     <td><strong>TỔNG CỘNG</strong></td>
-    <td class="text-center" style="color: var(--primary-color); font-weight: bold;">${tongCongThang}</td>
+    <td class="text-center" style="font-weight: bold; color: var(--primary-color);">${tongCongThang}</td>
     <td class="text-center"><strong>${tongL1}</strong></td>
     <td class="text-center"><strong>${tongL2}</strong></td>
     <td class="text-center"><strong>${tongL3}</strong></td>
     <td class="text-center"><strong>${tongKhac}</strong></td>
-    <td class="text-center" style="color: var(--primary-color); font-weight: bold;">${tongTatCa}</td>
+    <td class="text-center" style="font-weight: bold; color: var(--success-dark);">${tongTatCa}</td>
   `;
   tbody.appendChild(trTotal);
 }
@@ -703,15 +793,32 @@ function initExportExcel() {
         return textStr.charAt(0).toUpperCase() + textStr.slice(1) + " đồng chẵn.";
       };
 
+      const isQ = (typeof thongKeMode !== 'undefined' && thongKeMode !== 'current');
+      const activeTTData = isQ ? thongKeQuarterData.thuthuat : thuThuatData;
+      
+      const yStr = document.getElementById('year-picker').value;
+      let titleStr = '';
+      let lastDayObj = null;
+
+      if (isQ) {
+        const qMap = { q1: 'QUÝ I', q2: 'QUÝ II', q3: 'QUÝ III', q4: 'QUÝ IV' };
+        const qMonthMap = { q1: 3, q2: 6, q3: 9, q4: 12 };
+        titleStr = `${qMap[thongKeMode]} NĂM ${yStr}`;
+        lastDayObj = { y: yStr, m: String(qMonthMap[thongKeMode]).padStart(2, '0') };
+      } else {
+        const [year, month] = currentMonthYear.split('-');
+        titleStr = `THÁNG ${month} NĂM ${year}`;
+        lastDayObj = { y: year, m: month };
+      }
+
       const updateDateInSheet = (ws) => {
         if (!ws) return;
         ws.eachRow((row) => {
           row.eachCell((cell) => {
             const cellStr = getCellValueStr(cell);
             if (cellStr && cellStr.includes('Mạo Khê, ngày')) {
-              const [y, m] = currentMonthYear.split('-');
-              const lastDay = new Date(y, m, 0).getDate();
-              setCellValueSafe(ws, cell.address, `Mạo Khê, ngày ${String(lastDay).padStart(2, '0')} tháng ${m} năm ${y}`);
+              const lastDay = new Date(lastDayObj.y, lastDayObj.m, 0).getDate();
+              setCellValueSafe(ws, cell.address, `Mạo Khê, ngày ${String(lastDay).padStart(2, '0')} tháng ${lastDayObj.m} năm ${lastDayObj.y}`);
             }
           });
         });
@@ -725,10 +832,7 @@ function initExportExcel() {
       // ================= SHEET 1 =================
       const ws1 = workbook.getWorksheet(1);
       if (ws1) {
-        if (currentMonthYear) {
-          const [y, m] = currentMonthYear.split('-');
-          setCellValueSafe(ws1, 'A5', `THÁNG ${m} NĂM ${y}`);
-        }
+        setCellValueSafe(ws1, 'A5', titleStr);
         updateDateInSheet(ws1);
 
         let row1 = 10;
@@ -740,7 +844,7 @@ function initExportExcel() {
           const empName = cellStr.normalize('NFC').toLowerCase().trim();
           
           let stats = null;
-          for (const [key, value] of Object.entries(thuThuatData)) {
+          for (const [key, value] of Object.entries(activeTTData)) {
             if (key.normalize('NFC').toLowerCase().trim() === empName) {
               stats = value;
               break;
@@ -783,10 +887,7 @@ function initExportExcel() {
       // ================= SHEET 2 =================
       const ws2 = workbook.getWorksheet(2);
       if (ws2) {
-        if (currentMonthYear) {
-          const [y, m] = currentMonthYear.split('-');
-          setCellValueSafe(ws2, 'A5', `THÁNG ${m} NĂM ${y}`);
-        }
+        setCellValueSafe(ws2, 'A5', titleStr);
         updateDateInSheet(ws2);
 
         setCellValueSafe(ws2, 'B8', totalL1);
@@ -805,10 +906,7 @@ function initExportExcel() {
       // ================= SHEET 3 =================
       const ws3 = workbook.getWorksheet(3);
       if (ws3) {
-        if (currentMonthYear) {
-          const [y, m] = currentMonthYear.split('-');
-          setCellValueSafe(ws3, 'A5', `THÁNG ${m} NĂM ${y}`);
-        }
+        setCellValueSafe(ws3, 'A5', titleStr);
         updateDateInSheet(ws3);
 
         let row3 = 7;
@@ -820,7 +918,7 @@ function initExportExcel() {
           const empName = cellStr.normalize('NFC').toLowerCase().trim();
           
           let stats = null;
-          for (const [key, value] of Object.entries(thuThuatData)) {
+          for (const [key, value] of Object.entries(activeTTData)) {
             if (key.normalize('NFC').toLowerCase().trim() === empName) {
               stats = value;
               break;

@@ -740,14 +740,28 @@ function checkPermissionJS(techName, procName) {
 function convertExcelDateToJSDate(serial) {
     if (!serial) return null;
     if (typeof serial === 'string') {
-        // Parse time string formatted as HH:MM or DD/MM/YYYY HH:MM
-        // Fallback robust logic
-        const dateObj = new Date(serial);
+        const s = serial.trim();
+        
+        // 1. Format: HH:MM DD/MM/YYYY (ví dụ: 09:21 07/05/2026)
+        const match1 = s.match(/^(\d{1,2}):(\d{1,2})\s+(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (match1) {
+            return new Date(parseInt(match1[5]), parseInt(match1[4]) - 1, parseInt(match1[3]), parseInt(match1[1]), parseInt(match1[2]), 0, 0);
+        }
+        
+        // 2. Format: DD/MM/YYYY HH:MM (ví dụ: 07/05/2026 09:21)
+        const match2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{1,2})/);
+        if (match2) {
+            return new Date(parseInt(match2[3]), parseInt(match2[2]) - 1, parseInt(match2[1]), parseInt(match2[4]), parseInt(match2[5]), 0, 0);
+        }
+        
+        // Fallback cho native JS (Lưu ý: new Date("07/05/2026") sẽ hiểu lầm là 05/07/2026)
+        const dateObj = new Date(s);
         if (!isNaN(dateObj.getTime())) return dateObj;
         
-        const parts = serial.match(/(\d+):(\d+)/);
+        // Fallback chỉ có HH:MM
+        const parts = s.match(/(\d+):(\d+)/);
         if (parts) {
-             const d = new Date();
+             const d = new Date(1900, 0, 1);
              d.setHours(parseInt(parts[1]), parseInt(parts[2]), 0, 0);
              return d;
         }

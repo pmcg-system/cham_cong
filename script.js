@@ -610,8 +610,78 @@ function initExportExcel() {
         }
       };
 
-      const updateDateInSheet = (ws) => {
+      function convertTienToChu(tien) {
+        if (tien === 0) return "Không đồng";
+        const mangso = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+        function dochangchuc(so, daydu) {
+            let chuoi = "";
+            const chuc = Math.floor(so / 10);
+            const donvi = so % 10;
+            if (chuc > 1) {
+                chuoi = " " + mangso[chuc] + " mươi";
+                if (donvi === 1) chuoi += " mốt";
+            } else if (chuc === 1) {
+                chuoi = " mười";
+                if (donvi === 1) chuoi += " một";
+            } else if (daydu && donvi > 0) {
+                chuoi = " lẻ";
+            }
+            if (donvi === 5 && chuc > 0) {
+                chuoi += " lăm";
+            } else if (donvi > 0 && !(donvi === 1 && chuc > 0) && !(donvi === 5 && chuc > 0)) {
+                chuoi += " " + mangso[donvi];
+            }
+            return chuoi;
+        }
+        function docblock(so, daydu) {
+            let chuoi = "";
+            const tram = Math.floor(so / 100);
+            so = so % 100;
+            if (daydu || tram > 0) {
+                chuoi = " " + mangso[tram] + " trăm";
+                chuoi += dochangchuc(so, true);
+            } else {
+                chuoi = dochangchuc(so, false);
+            }
+            return chuoi;
+        }
+        function dochangtrieu(so, daydu) {
+            let chuoi = "";
+            const trieu = Math.floor(so / 1000000);
+            so = so % 1000000;
+            if (trieu > 0) {
+                chuoi = docblock(trieu, daydu) + " triệu";
+                daydu = true;
+            }
+            const ngan = Math.floor(so / 1000);
+            so = so % 1000;
+            if (ngan > 0) {
+                chuoi += docblock(ngan, daydu) + " nghìn";
+                daydu = true;
+            }
+            if (so > 0) {
+                chuoi += docblock(so, daydu);
+            }
+            return chuoi;
+        }
+        let chuoi = "", hauto = "";
+        do {
+            const ty = tien % 1000000000;
+            tien = Math.floor(tien / 1000000000);
+            if (tien > 0) {
+                chuoi = dochangtrieu(ty, true) + hauto + chuoi;
+            } else {
+                chuoi = dochangtrieu(ty, false) + hauto + chuoi;
+            }
+            hauto = " tỷ";
+        } while (tien > 0);
+        chuoi = chuoi.trim();
+        return chuoi.substring(0, 1).toUpperCase() + chuoi.substring(1);
+      }
+
+      const updateDateAndWordsInSheet = (ws, totalMoney) => {
         if (!ws) return;
+        const words = totalMoney !== undefined ? `Tổng tiền bằng chữ: ${convertTienToChu(totalMoney)} đồng chẵn.` : '';
         ws.eachRow((row) => {
           row.eachCell((cell) => {
             const cellStr = getCellValueStr(cell);
@@ -619,6 +689,9 @@ function initExportExcel() {
               const [y, m] = currentMonthYear.split('-');
               const lastDay = new Date(y, m, 0).getDate();
               setCellValueSafe(ws, cell.address, `Mạo Khê, ngày ${String(lastDay).padStart(2, '0')} tháng ${m} năm ${y}`);
+            }
+            if (words && cellStr && cellStr.includes('Tổng tiền bằng chữ:')) {
+              setCellValueSafe(ws, cell.address, words);
             }
           });
         });
@@ -628,6 +701,15 @@ function initExportExcel() {
       const priceL2 = 19500;
       const priceL3 = 15000;
       let totalL1 = 0, totalL2 = 0, totalL3 = 0;
+      
+      // Tính toán trước tổng tiền để dùng chung cho 3 Sheet
+      for (const stats of Object.values(thuThuatData)) {
+         totalL1 += stats.loai1 || 0;
+         totalL2 += stats.loai2 || 0;
+         totalL3 += stats.loai3 || 0;
+      }
+      const grandTotalMoney = (totalL1 * priceL1) + (totalL2 * priceL2) + (totalL3 * priceL3);
+      totalL1 = 0; totalL2 = 0; totalL3 = 0; // Reset để loop của Sheet 1 tự tính lại cho khớp
 
       // ================= SHEET 1 =================
       const ws1 = workbook.getWorksheet(1);
@@ -636,7 +718,7 @@ function initExportExcel() {
           const [y, m] = currentMonthYear.split('-');
           setCellValueSafe(ws1, 'A5', `THÁNG ${m} NĂM ${y}`);
         }
-        updateDateInSheet(ws1);
+        updateDateAndWordsInSheet(ws1, grandTotalMoney);
 
         let row1 = 10;
         while (true) {
@@ -694,7 +776,7 @@ function initExportExcel() {
           const [y, m] = currentMonthYear.split('-');
           setCellValueSafe(ws2, 'A5', `THÁNG ${m} NĂM ${y}`);
         }
-        updateDateInSheet(ws2);
+        updateDateAndWordsInSheet(ws2, grandTotalMoney);
 
         setCellValueSafe(ws2, 'B8', totalL1);
         setCellValueSafe(ws2, 'D8', totalL1 * priceL1);
@@ -716,7 +798,7 @@ function initExportExcel() {
           const [y, m] = currentMonthYear.split('-');
           setCellValueSafe(ws3, 'A5', `THÁNG ${m} NĂM ${y}`);
         }
-        updateDateInSheet(ws3);
+        updateDateAndWordsInSheet(ws3, grandTotalMoney);
 
         let row3 = 7;
         while (true) {

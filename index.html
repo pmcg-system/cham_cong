@@ -141,16 +141,14 @@
         <div class="card">
           <div class="card-header">
             <h3>Tải lên dữ liệu thủ thuật</h3>
+            <div>
+              <input type="file" id="excel-file-input" accept=".xlsx, .xls" hidden>
+              <button class="btn btn-primary" onclick="document.getElementById('excel-file-input').click()">
+                <i class='bx bx-file'></i> Chọn File Excel
+              </button>
+            </div>
           </div>
           <div class="card-body">
-            <div class="upload-area" id="upload-area">
-              <i class='bx bx-cloud-upload upload-icon'></i>
-              <p>Kéo thả file Excel vào đây hoặc click để chọn file</p>
-              <input type="file" id="excel-file-input" accept=".xlsx, .xls" hidden>
-              <button class="btn btn-primary" onclick="document.getElementById('excel-file-input').click()">Chọn File
-                Excel</button>
-            </div>
-
             <div id="preview-section" class="hidden">
               <div class="preview-header">
                 <h4>Xem trước dữ liệu</h4>

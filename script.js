@@ -345,7 +345,7 @@ function initExcelUploader() {
       const workbook = XLSX.read(data, { type: 'array' });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-      const dataRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      const dataRows = XLSX.utils.sheet_to_json(worksheet, { header: "A", defval: "", blankrows: true });
 
       processExcelData(dataRows);
     };
@@ -360,18 +360,21 @@ function initExcelUploader() {
 function processExcelData(dataRows) {
   thuThuatData = {}; // Reset data mới
 
-  // Dữ liệu bắt đầu từ dòng 13 (index 12)
-  for (let i = 12; i < dataRows.length; i++) {
+  // Duyệt qua toàn bộ các dòng, an toàn 100%
+  for (let i = 0; i < dataRows.length; i++) {
     const row = dataRows[i];
-    if (!row || row.length === 0) continue;
+    if (!row) continue;
 
-    // Cột AN (Loại thủ thuật) là index 39, Cột AT (Thủ thuật viên chính) là index 45
-    const loaiTT = row[39];
-    let empName = row[45];
+    // Đọc đích danh từ cột AN và AT
+    const loaiTT = row['AN'];
+    let empName = row['AT'];
 
-    if (!empName || typeof empName !== 'string') continue;
-    empName = empName.trim();
     if (!empName) continue;
+    empName = String(empName).trim();
+    if (!empName) continue;
+    
+    // Bỏ qua dòng tiêu đề nếu vô tình bị lẫn vào
+    if (empName.toLowerCase().includes('thủ thuật viên') || empName.toLowerCase().includes('tên nhân viên')) continue;
 
     if (!thuThuatData[empName]) {
       thuThuatData[empName] = { loai1: 0, loai2: 0, loai3: 0, khac: 0 };

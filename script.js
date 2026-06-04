@@ -345,9 +345,9 @@ function initExcelUploader() {
       const workbook = XLSX.read(data, { type: 'array' });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-      const json = XLSX.utils.sheet_to_json(worksheet);
+      const dataRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-      processExcelData(json);
+      processExcelData(dataRows);
     };
     reader.readAsArrayBuffer(file);
   });
@@ -357,25 +357,42 @@ function initExcelUploader() {
   });
 }
 
-function processExcelData(jsonData) {
+function processExcelData(dataRows) {
   thuThuatData = {}; // Reset data mới
 
-  jsonData.forEach(row => {
-    // Đọc các cột dựa theo tên cột (Cần linh hoạt hoặc báo user format chuẩn)
-    // Giả sử tên cột là: "Tên nhân viên", "Thủ thuật loại 1", "Thủ thuật loại 2", "Thủ thuật loại 3"
-    // Nếu có khoảng trắng hoặc viết hoa thì tự map
-    let empName = row['Tên nhân viên'] || row['Ten nhan vien'];
-    if (!empName) return;
+  // Dữ liệu bắt đầu từ dòng 13 (index 12)
+  for (let i = 12; i < dataRows.length; i++) {
+    const row = dataRows[i];
+    if (!row || row.length === 0) continue;
 
+    // Cột AN (Loại thủ thuật) là index 39, Cột AT (Thủ thuật viên chính) là index 45
+    const loaiTT = row[39];
+    let empName = row[45];
+
+    if (!empName || typeof empName !== 'string') continue;
     empName = empName.trim();
+    if (!empName) continue;
 
-    thuThuatData[empName] = {
-      loai1: parseInt(row['Thủ thuật loại 1'] || 0) || 0,
-      loai2: parseInt(row['Thủ thuật loại 2'] || 0) || 0,
-      loai3: parseInt(row['Thủ thuật loại 3'] || 0) || 0,
-    };
+    if (!thuThuatData[empName]) {
+      thuThuatData[empName] = { loai1: 0, loai2: 0, loai3: 0, khac: 0 };
+    }
 
-    // Tự động thêm nhân viên vào danh sách nếu chưa có
+    if (loaiTT) {
+      const strLoai = String(loaiTT).toLowerCase();
+      if (strLoai.includes('loại 1')) {
+        thuThuatData[empName].loai1++;
+      } else if (strLoai.includes('loại 2')) {
+        thuThuatData[empName].loai2++;
+      } else if (strLoai.includes('loại 3')) {
+        thuThuatData[empName].loai3++;
+      } else {
+        thuThuatData[empName].khac++;
+      }
+    }
+  }
+
+  // Tự động thêm nhân viên vào danh sách nếu chưa có
+  Object.keys(thuThuatData).forEach(empName => {
     if (!employees.includes(empName)) {
       employees.push(empName);
       saveEmployeesLocally();
@@ -390,9 +407,10 @@ function processExcelData(jsonData) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><strong>${emp}</strong></td>
-      <td>${stats.loai1}</td>
-      <td>${stats.loai2}</td>
-      <td>${stats.loai3}</td>
+      <td>${stats.loai1 || 0}</td>
+      <td>${stats.loai2 || 0}</td>
+      <td>${stats.loai3 || 0}</td>
+      <td>${stats.khac || 0}</td>
     `;
     tbody.appendChild(tr);
   }
@@ -418,15 +436,16 @@ function renderThongKeTable() {
     }
 
     // Lấy thủ thuật
-    const stats = thuThuatData[emp] || { loai1: 0, loai2: 0, loai3: 0 };
+    const stats = thuThuatData[emp] || { loai1: 0, loai2: 0, loai3: 0, khac: 0 };
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><strong>${emp}</strong></td>
       <td style="color: var(--primary-color); font-weight: bold;">${tongCong}</td>
-      <td>${stats.loai1}</td>
-      <td>${stats.loai2}</td>
-      <td>${stats.loai3}</td>
+      <td>${stats.loai1 || 0}</td>
+      <td>${stats.loai2 || 0}</td>
+      <td>${stats.loai3 || 0}</td>
+      <td>${stats.khac || 0}</td>
     `;
     tbody.appendChild(tr);
   });

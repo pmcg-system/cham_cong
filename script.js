@@ -667,7 +667,7 @@ function fetchQuarterData(mode) {
   else if (mode === 'q4') months = ['10', '11', '12'];
   
   Promise.all(months.map(m => 
-    fetch(`${GAS_WEBAPP_URL}?action=get_data&monthYear=${year}-${m}`).then(res => res.json())
+    fetch(`${GAS_WEBAPP_URL}?action=getAllData&monthYear=${year}-${m}`, { redirect: 'follow' }).then(res => res.json())
   ))
   .then(results => {
     let mergedChamCong = {};

@@ -375,26 +375,35 @@ function renderEmployeesTable() {
 }
 
 // --- HELPER BẢNG CHẤM CÔNG ---
+let customHolidays = [];
+
+function loadSettings() {
+  // Tải ngày lễ
+  const hData = localStorage.getItem('med_holidays');
+  if (hData) {
+    customHolidays = hData.split(',').map(s => s.trim());
+  } else {
+    customHolidays = ['01/01', '30/04', '01/05', '02/09'];
+  }
+  
+  // Áp dụng Dark Mode
+  if (localStorage.getItem('med_dark_mode') === 'true') {
+    document.body.classList.add('dark-mode');
+  }
+}
+
+// Chạy loadSettings ngay khi khởi tạo
+loadSettings();
+
 function isHoliday(y, m, d) {
   const dateObj = new Date(y, m - 1, d);
   const dayOfWeek = dateObj.getDay();
-  // Cuối tuần
-  if (dayOfWeek === 0 || dayOfWeek === 6) return true;
   
-  // Ngày lễ dương lịch cố định
-  const md = `${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-  const solarHolidays = ['01-01', '04-30', '05-01', '09-01', '09-02']; 
-  if (solarHolidays.includes(md)) return true;
+  // Yêu cầu: "với ngày lễ hoặc chủ nhật thì khoa sẽ không đi làm"
+  if (dayOfWeek === 0) return true; // Chỉ Chủ Nhật mới nghỉ cố định
   
-  // Các ngày lễ âm lịch (Giỗ tổ, Tết) năm 2024 - 2027
-  const extraHolidays = [
-    '2024-04-18', '2024-02-08','2024-02-09','2024-02-10','2024-02-11','2024-02-12','2024-02-13','2024-02-14',
-    '2025-04-07', '2025-01-28','2025-01-29','2025-01-30','2025-01-31','2025-02-01','2025-02-02','2025-02-03',
-    '2026-04-26', '2026-02-16','2026-02-17','2026-02-18','2026-02-19','2026-02-20','2026-02-21','2026-02-22',
-    '2027-04-16', '2027-02-05','2027-02-06','2027-02-07','2027-02-08','2027-02-09','2027-02-10','2027-02-11'
-  ];
-  const ymd = `${y}-${md}`;
-  if (extraHolidays.includes(ymd)) return true;
+  const md = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`;
+  if (customHolidays.includes(md)) return true;
   
   return false;
 }
@@ -449,14 +458,27 @@ function renderChamCongTable() {
       const isOff = isHoliday(year, month, d);
       const bgClass = isOff ? 'bg-holiday' : '';
 
-      rowHtml += `
-        <td class="text-center ${bgClass}" style="vertical-align: middle;">
-          <div class="cell-checkbox-group ${colorClass}" id="group-${emp.replace(/\s+/g, '')}-${d}">
-            <label><input type="checkbox" class="cb-sang" data-emp="${emp}" data-day="${d}" ${val === 'sang' || val === 'ca-ngay' ? 'checked' : ''}> Sáng</label>
-            <label><input type="checkbox" class="cb-chieu" data-emp="${emp}" data-day="${d}" ${val === 'chieu' || val === 'ca-ngay' ? 'checked' : ''}> Chiều</label>
-          </div>
-        </td>
-      `;
+      if (isOff) {
+        rowHtml += `
+          <td class="text-center ${bgClass}" style="vertical-align: middle;">
+            <div style="color: var(--text-muted); font-size: 0.8rem; font-style: italic;">Nghỉ</div>
+          </td>
+        `;
+        // Tự động xóa dữ liệu nếu có bị dư thừa
+        if (val !== '') {
+          chamCongData[emp][d] = '';
+          triggerAutoSaveChamCong();
+        }
+      } else {
+        rowHtml += `
+          <td class="text-center ${bgClass}" style="vertical-align: middle;">
+            <div class="cell-checkbox-group ${colorClass}" id="group-${emp.replace(/\s+/g, '')}-${d}">
+              <label><input type="checkbox" class="cb-sang" data-emp="${emp}" data-day="${d}" ${val === 'sang' || val === 'ca-ngay' ? 'checked' : ''}> Sáng</label>
+              <label><input type="checkbox" class="cb-chieu" data-emp="${emp}" data-day="${d}" ${val === 'chieu' || val === 'ca-ngay' ? 'checked' : ''}> Chiều</label>
+            </div>
+          </td>
+        `;
+      }
     }
     rowHtml += `<td class="tong-cong-cell text-center" data-emp-total="${emp}" style="font-size: 1.1rem; color: var(--primary-color);"><strong>${tongCong}</strong></td>`;
     tr.innerHTML = rowHtml;
@@ -929,9 +951,10 @@ function initExportExcel() {
         });
       };
 
-      const priceL1 = 37500;
-      const priceL2 = 19500;
-      const priceL3 = 15000;
+      // Đọc đơn giá từ Cài Đặt (hoặc mặc định)
+      const priceL1 = parseInt(localStorage.getItem('med_price_l1')) || 37500;
+      const priceL2 = parseInt(localStorage.getItem('med_price_l2')) || 19500;
+      const priceL3 = parseInt(localStorage.getItem('med_price_l3')) || 15000;
       let totalL1 = 0, totalL2 = 0, totalL3 = 0;
 
       // ================= SHEET 1 =================
@@ -1755,6 +1778,64 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       };
       reader.readAsText(file);
+    });
+  }
+
+  // Khởi tạo Dark Mode ở header
+  const toggleDarkBtn = document.getElementById('theme-toggle');
+  if (toggleDarkBtn) {
+    const isDark = localStorage.getItem('med_dark_mode') === 'true';
+    const icon = toggleDarkBtn.querySelector('i');
+    if (isDark) {
+      document.body.classList.add('dark-mode');
+      icon.className = 'bx bx-sun';
+    } else {
+      document.body.classList.remove('dark-mode');
+      icon.className = 'bx bx-moon';
+    }
+
+    toggleDarkBtn.addEventListener('click', () => {
+      const currentlyDark = document.body.classList.contains('dark-mode');
+      if (currentlyDark) {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('med_dark_mode', 'false');
+        icon.className = 'bx bx-moon';
+      } else {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('med_dark_mode', 'true');
+        icon.className = 'bx bx-sun';
+      }
+    });
+  }
+
+  const inPrice1 = document.getElementById('price-l1');
+  const inPrice2 = document.getElementById('price-l2');
+  const inPrice3 = document.getElementById('price-l3');
+  const btnSavePrices = document.getElementById('btn-save-prices');
+  
+  if (inPrice1 && inPrice2 && inPrice3 && btnSavePrices) {
+    inPrice1.value = localStorage.getItem('med_price_l1') || 37500;
+    inPrice2.value = localStorage.getItem('med_price_l2') || 19500;
+    inPrice3.value = localStorage.getItem('med_price_l3') || 15000;
+    
+    btnSavePrices.addEventListener('click', () => {
+      localStorage.setItem('med_price_l1', inPrice1.value);
+      localStorage.setItem('med_price_l2', inPrice2.value);
+      localStorage.setItem('med_price_l3', inPrice3.value);
+      showToast('Lưu đơn giá thủ thuật thành công!');
+    });
+  }
+
+  const inHoliday = document.getElementById('holiday-input');
+  const btnSaveHolidays = document.getElementById('btn-save-holidays');
+  if (inHoliday && btnSaveHolidays) {
+    inHoliday.value = customHolidays.join(', ');
+    btnSaveHolidays.addEventListener('click', () => {
+      const val = inHoliday.value.trim();
+      localStorage.setItem('med_holidays', val);
+      loadSettings();
+      renderChamCongTable(); // Vẽ lại bảng
+      showToast('Cập nhật ngày lễ thành công!');
     });
   }
 });

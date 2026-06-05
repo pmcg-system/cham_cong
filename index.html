@@ -118,14 +118,20 @@
       <!-- Header -->
       <header class="top-header">
         <h1 id="page-title">Bảng Chấm Công</h1>
-        <div class="date-selector" id="top-date-selector">
-          <label style="font-weight: 600; color: var(--primary-color);">Thời gian:</label>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size: 0.9rem; color: #555;">Tháng</span>
-            <input type="number" id="month-picker" min="1" max="12" class="input-field" style="width: 70px; padding: 6px; text-align: center; font-weight: bold;">
-            <span style="font-size: 0.9rem; color: #555;">Năm</span>
-            <input type="number" id="year-picker" min="2020" max="2050" class="input-field" style="width: 90px; padding: 6px; text-align: center; font-weight: bold;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <div class="date-selector" id="top-date-selector">
+            <label style="font-weight: 600; color: var(--primary-color);">Thời gian:</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size: 0.9rem; color: #555;">Tháng</span>
+              <input type="number" id="month-picker" min="1" max="12" class="input-field" style="width: 70px; padding: 6px; text-align: center; font-weight: bold;">
+              <span style="font-size: 0.9rem; color: #555;">Năm</span>
+              <input type="number" id="year-picker" min="2020" max="2050" class="input-field" style="width: 90px; padding: 6px; text-align: center; font-weight: bold;">
+            </div>
           </div>
+          <!-- Dark Mode Toggle Button -->
+          <button id="theme-toggle" class="btn btn-secondary" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--border-color); color: var(--text-main);" title="Giao diện tối">
+            <i class='bx bx-moon' style="font-size: 1.2rem;"></i>
+          </button>
         </div>
       </header>
 
@@ -304,6 +310,41 @@
                 <button class="btn btn-secondary" style="width: 100%; border: 1px solid var(--warning-color); color: var(--warning-color);" onclick="document.getElementById('restore-file-input').click()">
                   <i class='bx bx-refresh'></i> Chọn File Khôi Phục
                 </button>
+              </div>
+            </div>
+
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid var(--border-color);">
+
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+              <!-- Đơn Giá Thủ Thuật -->
+              <div style="flex: 2; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
+                <h4 style="margin-bottom: 15px;"><i class='bx bx-money'></i> Cấu Hình Đơn Giá Thủ Thuật (VNĐ)</h4>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <div>
+                    <label style="font-size: 0.9rem; color: var(--text-muted);">Loại 1</label>
+                    <input type="number" id="price-l1" class="input-field" value="37500" style="width: 100px;">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.9rem; color: var(--text-muted);">Loại 2</label>
+                    <input type="number" id="price-l2" class="input-field" value="19500" style="width: 100px;">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.9rem; color: var(--text-muted);">Loại 3</label>
+                    <input type="number" id="price-l3" class="input-field" value="15000" style="width: 100px;">
+                  </div>
+                  <div style="display: flex; align-items: flex-end;">
+                    <button class="btn btn-success" id="btn-save-prices">Lưu Đơn Giá</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: 20px; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
+              <h4 style="margin-bottom: 15px;"><i class='bx bx-calendar-event'></i> Danh Mục Ngày Lễ (Khoa Nghỉ)</h4>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">Nhập các ngày lễ trong năm theo định dạng ngày/tháng, cách nhau bởi dấu phẩy (VD: 30/04, 01/05, 02/09).</p>
+              <div style="display: flex; gap: 10px;">
+                <input type="text" id="holiday-input" class="input-field" style="flex: 1;" placeholder="VD: 01/01, 30/04, 01/05, 02/09">
+                <button class="btn btn-primary" id="btn-save-holidays">Lưu Ngày Lễ</button>
               </div>
             </div>
           </div>

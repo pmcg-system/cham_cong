@@ -45,7 +45,7 @@ function initTabs() {
     const activePane = document.getElementById(tabId);
     if (activePane) activePane.classList.add('active');
 
-    if (tabId === 'tab-kiemtra' || tabId === 'tab-nhanvien') {
+    if (tabId === 'tab-kiemtra' || tabId === 'tab-nhanvien' || tabId === 'tab-caidat') {
       dateSelector.style.display = 'none';
     } else {
       dateSelector.style.display = '';
@@ -53,6 +53,9 @@ function initTabs() {
 
     if (tabId === 'tab-thongke') {
       renderThongKeTable();
+    }
+    if (tabId === 'tab-tongquan') {
+      renderDashboard();
     }
   };
 
@@ -1522,3 +1525,158 @@ function addOtherRow(tbody, stt, tech, info, timeStr, reason) {
     `;
     tbody.appendChild(tr);
 }
+
+// --- TỔNG QUAN (DASHBOARD CHARTS) ---
+let chartChamCongInstance = null;
+let chartThuThuatInstance = null;
+
+function renderDashboard() {
+  if (typeof Chart === 'undefined') return;
+
+  const labels = [];
+  const congData = [];
+  const ttData = [];
+
+  // Lọc ra danh sách nhân viên có dữ liệu (có công hoặc có thủ thuật)
+  employees.forEach(emp => {
+    let tongCong = 0;
+    const cc = chamCongData[emp] || {};
+    Object.values(cc).forEach(val => {
+      if (val === 'sang' || val === 'chieu') tongCong += 0.5;
+      else if (val === 'ca-ngay') tongCong += 1;
+    });
+
+    const tt = thuThuatData[emp] || { loai1: 0, loai2: 0, loai3: 0 };
+    const tongTT = (tt.loai1 || 0) + (tt.loai2 || 0) + (tt.loai3 || 0);
+
+    if (tongCong > 0 || tongTT > 0) {
+      labels.push(emp);
+      congData.push(tongCong);
+      ttData.push(tongTT);
+    }
+  });
+
+  // Chart Chấm Công
+  const ctxCong = document.getElementById('chartChamCong');
+  if (ctxCong) {
+    if (chartChamCongInstance) chartChamCongInstance.destroy();
+    chartChamCongInstance = new Chart(ctxCong.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Ngày công',
+          data: congData,
+          backgroundColor: '#4cc9f0',
+          borderColor: '#4895ef',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+
+  // Chart Thủ Thuật
+  const ctxTT = document.getElementById('chartThuThuat');
+  if (ctxTT) {
+    if (chartThuThuatInstance) chartThuThuatInstance.destroy();
+    chartThuThuatInstance = new Chart(ctxTT.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Thủ thuật',
+          data: ttData,
+          backgroundColor: '#f72585',
+          borderColor: '#b5179e',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+}
+
+// --- CÀI ĐẶT (SAO LƯU / KHÔI PHỤC) ---
+document.addEventListener('DOMContentLoaded', () => {
+  const btnBackup = document.getElementById('btn-backup-data');
+  if (btnBackup) {
+    btnBackup.addEventListener('click', () => {
+      const dataToBackup = {
+        monthYear: currentMonthYear,
+        chamCongData: chamCongData,
+        thuThuatData: thuThuatData,
+        employees: employees
+      };
+      
+      const jsonStr = JSON.stringify(dataToBackup, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Backup_Data_${currentMonthYear}.json`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      showToast("Tải file sao lưu thành công!");
+    });
+  }
+
+  const fileInputRestore = document.getElementById('restore-file-input');
+  if (fileInputRestore) {
+    fileInputRestore.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsedData = JSON.parse(event.target.result);
+          if (!parsedData.monthYear || !parsedData.chamCongData) {
+            alert("File không đúng định dạng sao lưu của hệ thống!");
+            return;
+          }
+          
+          if (parsedData.monthYear !== currentMonthYear) {
+            const confirmMsg = `File này là dữ liệu của tháng ${parsedData.monthYear}, bạn đang ở tháng ${currentMonthYear}. Bạn có chắc muốn ghi đè lên tháng ${currentMonthYear} không?`;
+            if (!confirm(confirmMsg)) {
+              e.target.value = '';
+              return;
+            }
+          }
+
+          // Cập nhật Local Storage và Ram
+          if (parsedData.employees && Array.isArray(parsedData.employees)) {
+            employees = [...new Set([...employees, ...parsedData.employees])];
+            saveEmployeesLocally();
+          }
+
+          chamCongData = parsedData.chamCongData;
+          thuThuatData = parsedData.thuThuatData || {};
+
+          // Gọi đồng bộ lên Server
+          saveChamCongToServer();
+          saveThuThuatToServer();
+
+          // Refresh UI
+          renderEmployeesTable();
+          renderChamCongTable();
+          if (document.getElementById('tab-thongke').classList.contains('active')) renderThongKeTable();
+          if (document.getElementById('tab-tongquan').classList.contains('active')) renderDashboard();
+
+          alert("Đã khôi phục dữ liệu thành công!");
+        } catch (err) {
+          console.error(err);
+          alert("Lỗi khi đọc file khôi phục!");
+        }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    });
+  }
+});

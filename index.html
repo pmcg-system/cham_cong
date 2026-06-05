@@ -16,6 +16,8 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- ExcelJS cho xử lý Excel (ghi và giữ nguyên định dạng mẫu) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+  <!-- Chart.js cho vẽ biểu đồ -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Boxicons cho icons -->
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
@@ -73,14 +75,18 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="logo">
+        <div class="logo" style="cursor: pointer;" onclick="window.location.hash='tab-tongquan'">
           <img src="logo-chuan-chinh.png" alt="Logo" style="height: 70px; width: auto; object-fit: contain;">
           <h2>Quản Lý Khoa<br>YHCT - PHCN</h2>
         </div>
       </div>
 
       <ul class="nav-links">
-        <li class="active" data-tab="tab-chamcong">
+        <li class="active" data-tab="tab-tongquan">
+          <i class='bx bx-pie-chart-alt-2'></i>
+          <span>Tổng Quan</span>
+        </li>
+        <li data-tab="tab-chamcong">
           <i class='bx bx-calendar-check'></i>
           <span>Bảng Chấm Công</span>
         </li>
@@ -95,6 +101,10 @@
         <li data-tab="tab-kiemtra">
           <i class='bx bx-check-shield'></i>
           <span>Kiểm Tra Lỗi</span>
+        </li>
+        <li data-tab="tab-caidat" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto;">
+          <i class='bx bx-cog'></i>
+          <span>Cài Đặt Dữ Liệu</span>
         </li>
       </ul>
 
@@ -119,8 +129,27 @@
         </div>
       </header>
 
+      <!-- TAB: Tổng Quan -->
+      <section id="tab-tongquan" class="tab-pane active">
+        <div class="card">
+          <div class="card-header">
+            <h3>Tổng Quan Hoạt Động Của Khoa</h3>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 20px; padding: 20px;">
+            <div style="flex: 1; min-width: 300px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+              <h4 style="text-align: center; color: var(--primary-color); margin-bottom: 10px;">Biểu Đồ Ngày Công Làm Việc</h4>
+              <canvas id="chartChamCong" width="400" height="250"></canvas>
+            </div>
+            <div style="flex: 1; min-width: 300px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+              <h4 style="text-align: center; color: var(--success-dark); margin-bottom: 10px;">Biểu Đồ Số Lượng Thủ Thuật</h4>
+              <canvas id="chartThuThuat" width="400" height="250"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- TAB: Chấm Công -->
-      <section id="tab-chamcong" class="tab-pane active">
+      <section id="tab-chamcong" class="tab-pane">
         <div class="card">
           <div class="card-header">
             <h3>Chi tiết chấm công tháng</h3>
@@ -238,6 +267,40 @@
             </table>
           </div>
           <p class="note">* Danh sách này dùng chung cho toàn bộ ứng dụng và sẽ được lưu tự động cục bộ.</p>
+        </div>
+      </section>
+
+      <!-- TAB: Cài Đặt -->
+      <section id="tab-caidat" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>Sao Lưu & Khôi Phục Dữ Liệu</h3>
+          </div>
+          <div style="padding: 20px;">
+            <p style="margin-bottom: 20px; color: var(--text-muted);">
+              Tính năng này cho phép bạn tải về toàn bộ dữ liệu của Tháng hiện tại (Bảng Chấm Công và Bảng Thủ Thuật) thành file nén an toàn trên máy tính, phòng ngừa rủi ro mất dữ liệu trên máy chủ Google. 
+              Bạn cũng có thể tải file này lên lại để khôi phục dữ liệu về đúng trạng thái ban đầu.
+            </p>
+            
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+              <!-- Sao Lưu -->
+              <div style="flex: 1; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; text-align: center;">
+                <i class='bx bx-download' style="font-size: 3rem; color: var(--success-dark); margin-bottom: 10px;"></i>
+                <h4 style="margin-bottom: 15px;">Sao Lưu Tháng Này</h4>
+                <button class="btn btn-primary" id="btn-backup-data" style="width: 100%;"><i class='bx bxs-save'></i> Tải Dữ Liệu Về Máy</button>
+              </div>
+
+              <!-- Khôi Phục -->
+              <div style="flex: 1; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; text-align: center;">
+                <i class='bx bx-upload' style="font-size: 3rem; color: var(--warning-color); margin-bottom: 10px;"></i>
+                <h4 style="margin-bottom: 15px;">Khôi Phục Dữ Liệu</h4>
+                <input type="file" id="restore-file-input" accept=".json" style="display: none;" />
+                <button class="btn btn-secondary" style="width: 100%; border: 1px solid var(--warning-color); color: var(--warning-color);" onclick="document.getElementById('restore-file-input').click()">
+                  <i class='bx bx-refresh'></i> Chọn File Khôi Phục
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

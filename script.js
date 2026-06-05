@@ -352,22 +352,60 @@ function renderEmployeesTable() {
   });
 }
 
+// --- HELPER BẢNG CHẤM CÔNG ---
+function isHoliday(y, m, d) {
+  const dateObj = new Date(y, m - 1, d);
+  const dayOfWeek = dateObj.getDay();
+  // Cuối tuần
+  if (dayOfWeek === 0 || dayOfWeek === 6) return true;
+  
+  // Ngày lễ dương lịch cố định
+  const md = `${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  const solarHolidays = ['01-01', '04-30', '05-01', '09-01', '09-02']; 
+  if (solarHolidays.includes(md)) return true;
+  
+  // Các ngày lễ âm lịch (Giỗ tổ, Tết) năm 2024 - 2027
+  const extraHolidays = [
+    '2024-04-18', '2024-02-08','2024-02-09','2024-02-10','2024-02-11','2024-02-12','2024-02-13','2024-02-14',
+    '2025-04-07', '2025-01-28','2025-01-29','2025-01-30','2025-01-31','2025-02-01','2025-02-02','2025-02-03',
+    '2026-04-26', '2026-02-16','2026-02-17','2026-02-18','2026-02-19','2026-02-20','2026-02-21','2026-02-22',
+    '2027-04-16', '2027-02-05','2027-02-06','2027-02-07','2027-02-08','2027-02-09','2027-02-10','2027-02-11'
+  ];
+  const ymd = `${y}-${md}`;
+  if (extraHolidays.includes(ymd)) return true;
+  
+  return false;
+}
+
+function getWeekdayName(y, m, d) {
+  const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+  return days[new Date(y, m - 1, d).getDay()];
+}
+
 // --- BẢNG CHẤM CÔNG ---
 function renderChamCongTable() {
   if (!currentMonthYear) return;
   const [year, month] = currentMonthYear.split('-');
   const daysInMonth = new Date(year, month, 0).getDate();
 
-  const header = document.getElementById('chamcong-header');
+  const thead = document.getElementById('chamcong-thead');
   const tbody = document.getElementById('chamcong-body');
 
   // Header
-  let headerHtml = `<th>Tên Nhân Viên</th>`;
+  let theadHtml = `<tr><th rowspan="2" style="vertical-align: middle;">Tên Nhân Viên</th>`;
+  let weekHtml = `<tr>`;
+
   for (let d = 1; d <= daysInMonth; d++) {
-    headerHtml += `<th>Ngày ${d}</th>`;
+    const isOff = isHoliday(year, month, d);
+    const bgClass = isOff ? 'bg-holiday' : '';
+    theadHtml += `<th class="${bgClass} text-center">Ngày ${d}</th>`;
+    weekHtml += `<th class="${bgClass} text-center" style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">${getWeekdayName(year, month, d)}</th>`;
   }
-  headerHtml += `<th>Tổng Công</th>`;
-  header.innerHTML = headerHtml;
+  
+  theadHtml += `<th rowspan="2" style="vertical-align: middle; text-align: center;">Tổng Công</th></tr>`;
+  weekHtml += `</tr>`;
+  
+  thead.innerHTML = theadHtml + weekHtml;
 
   // Body
   tbody.innerHTML = '';
@@ -385,9 +423,12 @@ function renderChamCongTable() {
       if (val === 'sang') { colorClass = 'val-sang'; tongCong += 0.5; }
       else if (val === 'chieu') { colorClass = 'val-chieu'; tongCong += 0.5; }
       else if (val === 'ca-ngay') { colorClass = 'val-ca-ngay'; tongCong += 1; }
+      
+      const isOff = isHoliday(year, month, d);
+      const bgClass = isOff ? 'bg-holiday' : '';
 
       rowHtml += `
-        <td class="text-center" style="vertical-align: middle;">
+        <td class="text-center ${bgClass}" style="vertical-align: middle;">
           <div class="cell-checkbox-group ${colorClass}" id="group-${emp.replace(/\s+/g, '')}-${d}">
             <label><input type="checkbox" class="cb-sang" data-emp="${emp}" data-day="${d}" ${val === 'sang' || val === 'ca-ngay' ? 'checked' : ''}> Sáng</label>
             <label><input type="checkbox" class="cb-chieu" data-emp="${emp}" data-day="${d}" ${val === 'chieu' || val === 'ca-ngay' ? 'checked' : ''}> Chiều</label>
@@ -395,7 +436,7 @@ function renderChamCongTable() {
         </td>
       `;
     }
-    rowHtml += `<td class="tong-cong-cell text-center" data-emp-total="${emp}"><strong>${tongCong}</strong></td>`;
+    rowHtml += `<td class="tong-cong-cell text-center" data-emp-total="${emp}" style="font-size: 1.1rem; color: var(--primary-color);"><strong>${tongCong}</strong></td>`;
     tr.innerHTML = rowHtml;
     tbody.appendChild(tr);
   });

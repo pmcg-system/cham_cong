@@ -288,6 +288,14 @@ body {
   background-color: #f4f6fe;
 }
 
+.data-table tbody tr:hover td.bg-holiday {
+  background-color: #fff0b3 !important;
+}
+
+.bg-holiday {
+  background-color: #fff9c4 !important;
+}
+
 .text-center {
   text-align: center !important;
 }

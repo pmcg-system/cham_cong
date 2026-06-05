@@ -54,49 +54,76 @@
           
           log("Đã đọc file Excel thành công. Bắt đầu xử lý...");
           
-          const monthRanges = [
-            { name: "Tháng 1", monthYear: "2026-01", start: 4, end: 17, days: 31 },  // Dòng 5 -> 18
-            { name: "Tháng 2", monthYear: "2026-02", start: 24, end: 37, days: 28 }, // Dòng 25 -> 38
-            { name: "Tháng 3", monthYear: "2026-03", start: 44, end: 58, days: 31 }, // Dòng 45 -> 59
-            { name: "Tháng 4", monthYear: "2026-04", start: 65, end: 79, days: 30 }, // Dòng 66 -> 80
-            { name: "Tháng 5", monthYear: "2026-05", start: 86, end: 100, days: 31 } // Dòng 87 -> 101
-          ];
+          let currentMonth = null;
+          const allData = {};
 
-          for (const m of monthRanges) {
-            let chamCongData = {};
-            for (let i = m.start; i <= m.end; i++) {
-              if (i >= rows.length) break;
-              const row = rows[i];
-              let empName = row[1]; // Cột B (Họ và tên)
-              if (!empName || typeof empName !== 'string') continue;
-              empName = empName.trim();
-              if (empName === "") continue;
+          for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row || row.length === 0) continue;
 
-              chamCongData[empName] = {};
-              for (let d = 1; d <= m.days; d++) {
-                let val = row[d + 1]; // Cột C tương ứng mùng 1, Cột D là mùng 2...
+            const strRow = JSON.stringify(row);
+            // Bắt đầu một tháng mới
+            if (strRow.includes('"Tháng"') && strRow.includes('"Năm"')) {
+              const monthIdx = row.indexOf("Tháng");
+              const yearIdx = row.indexOf("Năm");
+              
+              let m = null;
+              for(let j = monthIdx + 1; j < yearIdx; j++) {
+                if (typeof row[j] === 'number') { m = row[j]; break; }
+              }
+              let y = null;
+              for(let j = yearIdx + 1; j < row.length; j++) {
+                if (typeof row[j] === 'number') { y = row[j]; break; }
+              }
+              if (m && y) {
+                currentMonth = `${y}-${String(m).padStart(2, '0')}`;
+                if (!allData[currentMonth]) allData[currentMonth] = {};
+              }
+              continue;
+            }
+
+            // Đọc dữ liệu nhân viên
+            const name = row[0];
+            if (typeof name === 'string' && name.trim().length > 0 && name !== "HỌ TÊN" && currentMonth) {
+              const empName = name.trim();
+              if (empName === "Tổng") continue;
+
+              const y = parseInt(currentMonth.split('-')[0]);
+              const m = parseInt(currentMonth.split('-')[1]);
+              const daysInMonth = new Date(y, m, 0).getDate();
+
+              allData[currentMonth][empName] = {};
+              for (let d = 1; d <= daysInMonth; d++) {
+                let val = row[d]; // Cột 0 là tên, Cột 1 là ngày 1, Cột d là ngày d
                 if (typeof val === 'string') val = val.trim().toUpperCase();
                 
                 if (val === 'X') {
-                  chamCongData[empName][d] = 'ca-ngay';
+                  allData[currentMonth][empName][d] = 'ca-ngay';
                 } else if (val === 'X/2') {
-                  chamCongData[empName][d] = 'sang';
+                  allData[currentMonth][empName][d] = 'sang';
                 }
               }
             }
+          }
 
-            log(`Đang đẩy dữ liệu ${m.name}...`);
-            // Gọi API lưu lên GAS
+          const monthsFound = Object.keys(allData).sort();
+          if (monthsFound.length === 0) {
+            log("Không tìm thấy dữ liệu tháng nào hợp lệ trong file!");
+            return;
+          }
+
+          for (const m of monthsFound) {
+            log(`Đang đẩy dữ liệu Tháng ${m}...`);
             const response = await fetch(GAS_WEBAPP_URL, {
               method: 'POST',
               body: JSON.stringify({
                 action: 'saveChamCong',
-                monthYear: m.monthYear,
-                data: chamCongData
+                monthYear: m,
+                data: allData[m]
               })
             });
             const text = await response.text();
-            log(`- ${m.name} tải lên thành công!`);
+            log(`- Tháng ${m} tải lên thành công!`);
           }
 
           log("\n✅ HOÀN TẤT! Bạn có thể về trang chính để kiểm tra dữ liệu.");

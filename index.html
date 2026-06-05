@@ -286,8 +286,14 @@
               <!-- Sao Lưu -->
               <div style="flex: 1; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; text-align: center;">
                 <i class='bx bx-download' style="font-size: 3rem; color: var(--success-dark); margin-bottom: 10px;"></i>
-                <h4 style="margin-bottom: 15px;">Sao Lưu Tháng Này</h4>
-                <button class="btn btn-primary" id="btn-backup-data" style="width: 100%;"><i class='bx bxs-save'></i> Tải Dữ Liệu Về Máy</button>
+                <h4 style="margin-bottom: 15px;">Tải Sao Lưu</h4>
+                <select id="backup-type" class="input-field" style="width: 100%; margin-bottom: 15px; text-align: center; font-weight: bold;">
+                  <option value="thang">Theo Tháng hiện tại</option>
+                  <option value="quy">Theo Quý hiện tại</option>
+                  <option value="nam">Theo Năm hiện tại</option>
+                  <option value="all">Toàn bộ dữ liệu</option>
+                </select>
+                <button class="btn btn-primary" id="btn-backup-data" style="width: 100%;"><i class='bx bxs-save'></i> Bắt Đầu Tải</button>
               </div>
 
               <!-- Khôi Phục -->

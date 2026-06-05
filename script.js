@@ -1537,6 +1537,12 @@ function renderDashboard() {
   const congData = [];
   const ttData = [];
 
+  const shortenName = (fullName) => {
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length <= 2) return fullName;
+    return parts.slice(-2).join(' ');
+  };
+
   // Lọc ra danh sách nhân viên có dữ liệu (có công hoặc có thủ thuật)
   employees.forEach(emp => {
     let tongCong = 0;
@@ -1550,7 +1556,7 @@ function renderDashboard() {
     const tongTT = (tt.loai1 || 0) + (tt.loai2 || 0) + (tt.loai3 || 0);
 
     if (tongCong > 0 || tongTT > 0) {
-      labels.push(emp);
+      labels.push(shortenName(emp));
       congData.push(tongCong);
       ttData.push(tongTT);
     }
@@ -1603,27 +1609,73 @@ function renderDashboard() {
   }
 }
 
-// --- CÀI ĐẶT (SAO LƯU / KHÔI PHỤC) ---
+// --- CÀI ĐẶT (SAO LƯU / KHÔI PHỤC NÂNG CAO) ---
 document.addEventListener('DOMContentLoaded', () => {
   const btnBackup = document.getElementById('btn-backup-data');
   if (btnBackup) {
-    btnBackup.addEventListener('click', () => {
-      const dataToBackup = {
-        monthYear: currentMonthYear,
-        chamCongData: chamCongData,
-        thuThuatData: thuThuatData,
-        employees: employees
-      };
-      
-      const jsonStr = JSON.stringify(dataToBackup, null, 2);
-      const blob = new Blob([jsonStr], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Backup_Data_${currentMonthYear}.json`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-      showToast("Tải file sao lưu thành công!");
+    btnBackup.addEventListener('click', async () => {
+      const type = document.getElementById('backup-type').value;
+      if (!GAS_WEBAPP_URL || GAS_WEBAPP_URL.includes('ĐIỀN_URL_WEB_APP')) {
+        alert("Vui lòng cấu hình URL Web App trước khi sao lưu!");
+        return;
+      }
+
+      showLoading(true);
+      let monthsToFetch = [];
+      let currentY = parseInt(document.getElementById('year-picker').value);
+      let currentM = parseInt(document.getElementById('month-picker').value);
+
+      if (type === 'thang') {
+        monthsToFetch.push(`${currentY}-${String(currentM).padStart(2, '0')}`);
+      } else if (type === 'quy') {
+        let q = Math.ceil(currentM / 3);
+        let startM = (q - 1) * 3 + 1;
+        for (let i = 0; i < 3; i++) monthsToFetch.push(`${currentY}-${String(startM + i).padStart(2, '0')}`);
+      } else if (type === 'nam') {
+        for (let i = 1; i <= 12; i++) monthsToFetch.push(`${currentY}-${String(i).padStart(2, '0')}`);
+      } else if (type === 'all') {
+        const thisYear = new Date().getFullYear();
+        for (let y = 2024; y <= Math.max(thisYear, currentY); y++) {
+          for (let i = 1; i <= 12; i++) monthsToFetch.push(`${y}-${String(i).padStart(2, '0')}`);
+        }
+      }
+
+      let finalData = { version: "2.0", type: type, timestamp: new Date().toISOString(), employees: employees, data: {} };
+
+      try {
+        // Tải dữ liệu theo batch (mỗi lần 3 tháng để tránh lỗi)
+        for (let i = 0; i < monthsToFetch.length; i += 3) {
+          const batch = monthsToFetch.slice(i, i + 3);
+          const promises = batch.map(m => 
+            fetch(`${GAS_WEBAPP_URL}?action=getAllData&monthYear=${m}`, { redirect: 'follow' })
+              .then(res => res.json())
+              .then(res => {
+                if (res.status === 'success') {
+                  finalData.data[m] = {
+                    chamCongData: res.data.chamcong || {},
+                    thuThuatData: res.data.thuthuat || {}
+                  };
+                }
+              }).catch(e => console.error(e))
+          );
+          await Promise.all(promises);
+        }
+
+        const jsonStr = JSON.stringify(finalData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Backup_${type}_${new Date().getTime()}.json`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        showToast("Sao lưu dữ liệu thành công!");
+      } catch (err) {
+        console.error(err);
+        alert("Có lỗi xảy ra khi tải dữ liệu từ máy chủ.");
+      } finally {
+        showLoading(false);
+      }
     });
   }
 
@@ -1634,47 +1686,73 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         try {
           const parsedData = JSON.parse(event.target.result);
-          if (!parsedData.monthYear || !parsedData.chamCongData) {
+          
+          if (!parsedData.data && !parsedData.chamCongData) {
             alert("File không đúng định dạng sao lưu của hệ thống!");
             return;
           }
-          
-          if (parsedData.monthYear !== currentMonthYear) {
-            const confirmMsg = `File này là dữ liệu của tháng ${parsedData.monthYear}, bạn đang ở tháng ${currentMonthYear}. Bạn có chắc muốn ghi đè lên tháng ${currentMonthYear} không?`;
-            if (!confirm(confirmMsg)) {
-              e.target.value = '';
-              return;
-            }
+
+          if (!confirm("Hệ thống sẽ tải toàn bộ dữ liệu từ file này lên Máy Chủ. Bạn có chắc chắn không?")) {
+            e.target.value = '';
+            return;
           }
 
-          // Cập nhật Local Storage và Ram
+          showLoading(true);
+
           if (parsedData.employees && Array.isArray(parsedData.employees)) {
             employees = [...new Set([...employees, ...parsedData.employees])];
             saveEmployeesLocally();
           }
 
-          chamCongData = parsedData.chamCongData;
-          thuThuatData = parsedData.thuThuatData || {};
+          // Xử lý cả định dạng cũ (version 1.0) và mới (version 2.0)
+          if (parsedData.version === "2.0") {
+            const months = Object.keys(parsedData.data);
+            for (let i = 0; i < months.length; i++) {
+              const m = months[i];
+              const mData = parsedData.data[m];
+              
+              // Cập nhật lên máy chủ tuần tự
+              await fetch(GAS_WEBAPP_URL, {
+                method: 'POST', body: JSON.stringify({ action: 'saveChamCong', monthYear: m, data: mData.chamCongData })
+              });
+              await fetch(GAS_WEBAPP_URL, {
+                method: 'POST', body: JSON.stringify({ action: 'saveThuThuat', monthYear: m, data: mData.thuThuatData })
+              });
 
-          // Gọi đồng bộ lên Server
-          saveChamCongToServer();
-          saveThuThuatToServer();
+              // Cập nhật bộ nhớ cục bộ nếu là tháng hiện tại
+              if (m === currentMonthYear) {
+                chamCongData = mData.chamCongData;
+                thuThuatData = mData.thuThuatData;
+              }
+            }
+          } else {
+            // Định dạng cũ (v1)
+            chamCongData = parsedData.chamCongData;
+            thuThuatData = parsedData.thuThuatData || {};
+            await fetch(GAS_WEBAPP_URL, {
+              method: 'POST', body: JSON.stringify({ action: 'saveChamCong', monthYear: currentMonthYear, data: chamCongData })
+            });
+            await fetch(GAS_WEBAPP_URL, {
+              method: 'POST', body: JSON.stringify({ action: 'saveThuThuat', monthYear: currentMonthYear, data: thuThuatData })
+            });
+          }
 
-          // Refresh UI
           renderEmployeesTable();
           renderChamCongTable();
           if (document.getElementById('tab-thongke').classList.contains('active')) renderThongKeTable();
           if (document.getElementById('tab-tongquan').classList.contains('active')) renderDashboard();
 
-          alert("Đã khôi phục dữ liệu thành công!");
+          showToast("Khôi phục toàn bộ dữ liệu thành công!");
         } catch (err) {
           console.error(err);
-          alert("Lỗi khi đọc file khôi phục!");
+          alert("Lỗi khi đọc và khôi phục file!");
+        } finally {
+          showLoading(false);
+          e.target.value = '';
         }
-        e.target.value = '';
       };
       reader.readAsText(file);
     });

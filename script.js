@@ -823,7 +823,7 @@ function renderThongKeTable() {
   });
 
   const trTotal = document.createElement('tr');
-  trTotal.style.backgroundColor = '#f8f9fc';
+  trTotal.className = 'total-row';
   trTotal.innerHTML = `
     <td><strong>TỔNG CỘNG</strong></td>
     <td class="text-center" style="font-weight: bold; color: var(--primary-color);">${tongCongThang}</td>

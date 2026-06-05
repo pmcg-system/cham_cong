@@ -256,6 +256,10 @@ body {
   border-top: 1px solid var(--border-color);
 }
 
+.data-table tr.total-row td {
+  background-color: #f8f9fc;
+}
+
 .data-table th:first-child,
 .data-table td:first-child {
   position: sticky;
@@ -637,11 +641,13 @@ body.dark-mode .data-table th {
 }
 
 body.dark-mode .data-table td {
+  background-color: var(--bg-card);
+  color: var(--text-main);
   border-bottom-color: #333;
 }
 
-body.dark-mode .data-table tr:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+body.dark-mode .data-table tr:hover td {
+  background-color: #2a2a2a;
 }
 
 body.dark-mode .input-field {
@@ -662,6 +668,14 @@ body.dark-mode .btn-secondary:hover {
   background-color: #444;
 }
 
-body.dark-mode #table-thongke trTotal {
+body.dark-mode .data-table tr.total-row td {
   background-color: #2a2a2a !important;
+}
+
+body.dark-mode .bg-holiday {
+  background-color: #2c2918 !important; /* Màu vàng tối */
+}
+
+body.dark-mode .data-table tbody tr:hover td.bg-holiday {
+  background-color: #3d3922 !important; /* Vàng tối hơn một chút khi hover */
 }

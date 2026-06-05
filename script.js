@@ -772,6 +772,24 @@ function renderThongKeTable() {
           const newTotal = (thuThuatData[emp].loai1 || 0) + (thuThuatData[emp].loai2 || 0) + (thuThuatData[emp].loai3 || 0);
           tr.querySelector('.tt-total').innerText = newTotal;
           
+          // Cập nhật lại tổng dọc (dòng TỔNG CỘNG)
+          if (!isQ) {
+            let totalL1 = 0, totalL2 = 0, totalL3 = 0;
+            tbody.querySelectorAll('input[data-type="loai1"]').forEach(el => totalL1 += parseInt(el.value) || 0);
+            tbody.querySelectorAll('input[data-type="loai2"]').forEach(el => totalL2 += parseInt(el.value) || 0);
+            tbody.querySelectorAll('input[data-type="loai3"]').forEach(el => totalL3 += parseInt(el.value) || 0);
+            
+            const sumL1 = document.getElementById('sum-l1');
+            const sumL2 = document.getElementById('sum-l2');
+            const sumL3 = document.getElementById('sum-l3');
+            const sumTotal = document.getElementById('sum-total');
+            
+            if (sumL1) sumL1.innerText = totalL1;
+            if (sumL2) sumL2.innerText = totalL2;
+            if (sumL3) sumL3.innerText = totalL3;
+            if (sumTotal) sumTotal.innerText = totalL1 + totalL2 + totalL3;
+          }
+          
           triggerAutoSaveThuThuat();
         });
       });
@@ -784,10 +802,10 @@ function renderThongKeTable() {
   trTotal.innerHTML = `
     <td><strong>TỔNG CỘNG</strong></td>
     <td class="text-center" style="font-weight: bold; color: var(--primary-color);">${tongCongThang}</td>
-    <td class="text-center"><strong>${tongL1}</strong></td>
-    <td class="text-center"><strong>${tongL2}</strong></td>
-    <td class="text-center"><strong>${tongL3}</strong></td>
-    <td class="text-center" style="font-weight: bold; color: var(--success-dark);">${tongTatCa}</td>
+    <td class="text-center"><strong id="sum-l1">${tongL1}</strong></td>
+    <td class="text-center"><strong id="sum-l2">${tongL2}</strong></td>
+    <td class="text-center"><strong id="sum-l3">${tongL3}</strong></td>
+    <td class="text-center" style="font-weight: bold; color: var(--success-dark);"><strong id="sum-total">${tongTatCa}</strong></td>
   `;
   tbody.appendChild(trTotal);
 }

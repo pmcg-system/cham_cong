@@ -584,3 +584,32 @@ body {
 .btn-secondary:hover {
   background-color: #dee2e6;
 }
+
+.thuthuat-input {
+  width: 60px;
+  padding: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  text-align: center;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-main);
+  background-color: transparent;
+  transition: var(--transition);
+}
+
+.thuthuat-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  background-color: var(--bg-card);
+  box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+}
+
+.thuthuat-input::-webkit-outer-spin-button,
+.thuthuat-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.thuthuat-input[type=number] {
+  -moz-appearance: textfield;
+}

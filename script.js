@@ -742,15 +742,46 @@ function renderThongKeTable() {
     tongL1 += l1; tongL2 += l2; tongL3 += l3; tongKhac += khac; tongTatCa += tongTT;
 
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><strong>${emp}</strong></td>
-      <td class="text-center" style="font-weight: bold; color: var(--primary-color);">${tongCong}</td>
-      <td class="text-center">${l1}</td>
-      <td class="text-center">${l2}</td>
-      <td class="text-center">${l3}</td>
-      <td class="text-center">${khac}</td>
-      <td class="text-center" style="font-weight: bold; color: var(--success-dark);">${tongTT}</td>
-    `;
+    
+    if (isQ) {
+      tr.innerHTML = `
+        <td><strong>${emp}</strong></td>
+        <td class="text-center" style="font-weight: bold; color: var(--primary-color);">${tongCong}</td>
+        <td class="text-center">${l1}</td>
+        <td class="text-center">${l2}</td>
+        <td class="text-center">${l3}</td>
+        <td class="text-center">${khac}</td>
+        <td class="text-center" style="font-weight: bold; color: var(--success-dark);">${tongTT}</td>
+      `;
+    } else {
+      tr.innerHTML = `
+        <td><strong>${emp}</strong></td>
+        <td class="text-center" style="font-weight: bold; color: var(--primary-color);">${tongCong}</td>
+        <td class="text-center"><input type="number" class="thuthuat-input" data-emp="${emp}" data-type="loai1" value="${l1}" min="0"></td>
+        <td class="text-center"><input type="number" class="thuthuat-input" data-emp="${emp}" data-type="loai2" value="${l2}" min="0"></td>
+        <td class="text-center"><input type="number" class="thuthuat-input" data-emp="${emp}" data-type="loai3" value="${l3}" min="0"></td>
+        <td class="text-center"><input type="number" class="thuthuat-input" data-emp="${emp}" data-type="khac" value="${khac}" min="0"></td>
+        <td class="text-center tt-total" style="font-weight: bold; color: var(--success-dark);">${tongTT}</td>
+      `;
+      
+      // Gắn sự kiện thay đổi
+      const inputs = tr.querySelectorAll('.thuthuat-input');
+      inputs.forEach(input => {
+        input.addEventListener('input', (e) => {
+          const type = e.target.getAttribute('data-type');
+          const val = parseInt(e.target.value) || 0;
+          
+          if (!thuThuatData[emp]) thuThuatData[emp] = { loai1: 0, loai2: 0, loai3: 0, khac: 0 };
+          thuThuatData[emp][type] = val;
+          
+          // Cập nhật lại tổng ngang
+          const newTotal = (thuThuatData[emp].loai1 || 0) + (thuThuatData[emp].loai2 || 0) + (thuThuatData[emp].loai3 || 0) + (thuThuatData[emp].khac || 0);
+          tr.querySelector('.tt-total').innerText = newTotal;
+          
+          triggerAutoSaveThuThuat();
+        });
+      });
+    }
     tbody.appendChild(tr);
   });
 
@@ -1112,13 +1143,23 @@ function saveChamCongToServer() {
     });
 }
 
+let saveThuThuatTimeout = null;
+
+function triggerAutoSaveThuThuat() {
+  updateSyncStatus('saving');
+  clearTimeout(saveThuThuatTimeout);
+
+  // Đợi 2 giây sau lần gõ cuối mới lưu để tránh spam request
+  saveThuThuatTimeout = setTimeout(() => {
+    saveThuThuatToServer();
+  }, 2000);
+}
+
 function saveThuThuatToServer() {
   if (!GAS_WEBAPP_URL || GAS_WEBAPP_URL.includes('ĐIỀN_URL_WEB_APP')) {
-    alert("Vui lòng cấu hình URL Web App trong script.js trước khi gửi.");
+    updateSyncStatus('error');
     return;
   }
-
-  showLoading(true);
 
   fetch(GAS_WEBAPP_URL, {
     method: 'POST',
@@ -1131,17 +1172,14 @@ function saveThuThuatToServer() {
     .then(res => res.json())
     .then(res => {
       if (res.status === 'success') {
-        showToast("Đã lưu dữ liệu thủ thuật thành công!");
+        updateSyncStatus('success');
       } else {
-        alert("Lỗi khi lưu: " + res.message);
+        updateSyncStatus('error');
       }
     })
     .catch(err => {
       console.error("Save Error:", err);
-      alert("Lỗi kết nối máy chủ");
-    })
-    .finally(() => {
-      showLoading(false);
+      updateSyncStatus('error');
     });
 }
 

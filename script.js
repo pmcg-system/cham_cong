@@ -598,16 +598,15 @@ function processExcelData(dataRows) {
   const tbody = document.getElementById('preview-thuthuat-body');
   if (tbody) {
     tbody.innerHTML = '';
-    let tongL1 = 0, tongL2 = 0, tongL3 = 0, tongKhac = 0, tongTatCa = 0;
+    let tongL1 = 0, tongL2 = 0, tongL3 = 0, tongTatCa = 0;
 
     for (const [emp, stats] of Object.entries(tempThuThuatData)) {
       const l1 = stats.loai1 || 0;
       const l2 = stats.loai2 || 0;
       const l3 = stats.loai3 || 0;
-      const khac = stats.khac || 0;
-      const total = l1 + l2 + l3 + khac;
+      const total = l1 + l2 + l3;
 
-      tongL1 += l1; tongL2 += l2; tongL3 += l3; tongKhac += khac; tongTatCa += total;
+      tongL1 += l1; tongL2 += l2; tongL3 += l3; tongTatCa += total;
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -615,7 +614,6 @@ function processExcelData(dataRows) {
         <td class="text-center">${l1}</td>
         <td class="text-center">${l2}</td>
         <td class="text-center">${l3}</td>
-        <td class="text-center">${khac}</td>
         <td class="text-center" style="color: var(--primary-color); font-weight: bold;">${total}</td>
       `;
       tbody.appendChild(tr);
@@ -628,7 +626,6 @@ function processExcelData(dataRows) {
       <td class="text-center"><strong>${tongL1}</strong></td>
       <td class="text-center"><strong>${tongL2}</strong></td>
       <td class="text-center"><strong>${tongL3}</strong></td>
-      <td class="text-center"><strong>${tongKhac}</strong></td>
       <td class="text-center" style="color: var(--primary-color); font-weight: bold;">${tongTatCa}</td>
     `;
     tbody.appendChild(trTotal);
@@ -732,14 +729,13 @@ function renderThongKeTable() {
     }
     tongCongThang += tongCong;
 
-    const tt = sourceThuThuat[emp] || { loai1: 0, loai2: 0, loai3: 0, khac: 0 };
+    const tt = sourceThuThuat[emp] || { loai1: 0, loai2: 0, loai3: 0 };
     const l1 = tt.loai1 || 0;
     const l2 = tt.loai2 || 0;
     const l3 = tt.loai3 || 0;
-    const khac = tt.khac || 0;
-    const tongTT = l1 + l2 + l3 + khac;
+    const tongTT = l1 + l2 + l3;
 
-    tongL1 += l1; tongL2 += l2; tongL3 += l3; tongKhac += khac; tongTatCa += tongTT;
+    tongL1 += l1; tongL2 += l2; tongL3 += l3; tongTatCa += tongTT;
 
     const tr = document.createElement('tr');
     
@@ -750,7 +746,6 @@ function renderThongKeTable() {
         <td class="text-center">${l1}</td>
         <td class="text-center">${l2}</td>
         <td class="text-center">${l3}</td>
-        <td class="text-center">${khac}</td>
         <td class="text-center" style="font-weight: bold; color: var(--success-dark);">${tongTT}</td>
       `;
     } else {
@@ -760,7 +755,6 @@ function renderThongKeTable() {
         <td class="text-center"><input type="number" class="thuthuat-input" data-emp="${emp}" data-type="loai1" value="${l1}" min="0"></td>
         <td class="text-center"><input type="number" class="thuthuat-input" data-emp="${emp}" data-type="loai2" value="${l2}" min="0"></td>
         <td class="text-center"><input type="number" class="thuthuat-input" data-emp="${emp}" data-type="loai3" value="${l3}" min="0"></td>
-        <td class="text-center"><input type="number" class="thuthuat-input" data-emp="${emp}" data-type="khac" value="${khac}" min="0"></td>
         <td class="text-center tt-total" style="font-weight: bold; color: var(--success-dark);">${tongTT}</td>
       `;
       
@@ -771,11 +765,11 @@ function renderThongKeTable() {
           const type = e.target.getAttribute('data-type');
           const val = parseInt(e.target.value) || 0;
           
-          if (!thuThuatData[emp]) thuThuatData[emp] = { loai1: 0, loai2: 0, loai3: 0, khac: 0 };
+          if (!thuThuatData[emp]) thuThuatData[emp] = { loai1: 0, loai2: 0, loai3: 0 };
           thuThuatData[emp][type] = val;
           
           // Cập nhật lại tổng ngang
-          const newTotal = (thuThuatData[emp].loai1 || 0) + (thuThuatData[emp].loai2 || 0) + (thuThuatData[emp].loai3 || 0) + (thuThuatData[emp].khac || 0);
+          const newTotal = (thuThuatData[emp].loai1 || 0) + (thuThuatData[emp].loai2 || 0) + (thuThuatData[emp].loai3 || 0);
           tr.querySelector('.tt-total').innerText = newTotal;
           
           triggerAutoSaveThuThuat();
@@ -793,7 +787,6 @@ function renderThongKeTable() {
     <td class="text-center"><strong>${tongL1}</strong></td>
     <td class="text-center"><strong>${tongL2}</strong></td>
     <td class="text-center"><strong>${tongL3}</strong></td>
-    <td class="text-center"><strong>${tongKhac}</strong></td>
     <td class="text-center" style="font-weight: bold; color: var(--success-dark);">${tongTatCa}</td>
   `;
   tbody.appendChild(trTotal);

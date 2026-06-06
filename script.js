@@ -215,7 +215,7 @@ function removeEmployee(index) {
     
     // Đồng bộ lệnh xóa lên máy chủ
     triggerAutoSaveChamCong();
-    saveThuThuatToServer();
+    triggerAutoSaveThuThuat();
   });
 }
 
@@ -1112,11 +1112,14 @@ function fetchDataFromServer() {
     return;
   }
 
-  showLoading(true);
+  // Thay vì block toàn bộ màn hình, chỉ đổi trạng thái đồng bộ và làm mờ bảng
+  updateSyncStatus('saving');
+  document.querySelectorAll('.tab-pane').forEach(el => el.style.opacity = '0.5');
+  document.querySelectorAll('.tab-pane').forEach(el => el.style.pointerEvents = 'none');
 
   fetch(`${GAS_WEBAPP_URL}?action=getAllData&monthYear=${currentMonthYear}`, {
     method: 'GET',
-    redirect: 'follow' // Quan trọng cho Google Apps Script
+    redirect: 'follow'
   })
     .then(res => res.json())
     .then(res => {
@@ -1124,7 +1127,6 @@ function fetchDataFromServer() {
         chamCongData = res.data.chamcong || {};
         thuThuatData = res.data.thuthuat || {};
 
-        // Auto thêm nhân viên từ data cũ nếu chưa có trong LocalStorage
         Object.keys(chamCongData).forEach(emp => {
           if (!employees.includes(emp)) employees.push(emp);
         });
@@ -1136,7 +1138,6 @@ function fetchDataFromServer() {
         renderEmployeesTable();
         renderChamCongTable();
         
-        // Cập nhật bảng thống kê nếu đang ở tab đó
         if (document.getElementById('tab-thongke').classList.contains('active')) {
           renderThongKeTable();
         }
@@ -1144,15 +1145,17 @@ function fetchDataFromServer() {
           renderDashboard();
         }
 
-        showToast(`Đã tải dữ liệu tháng ${currentMonthYear}`);
+        updateSyncStatus('success');
       }
     })
     .catch(err => {
       console.error("Fetch Error:", err);
+      updateSyncStatus('error');
       showToast("Lỗi khi tải dữ liệu từ máy chủ");
     })
     .finally(() => {
-      showLoading(false);
+      document.querySelectorAll('.tab-pane').forEach(el => el.style.opacity = '1');
+      document.querySelectorAll('.tab-pane').forEach(el => el.style.pointerEvents = 'auto');
     });
 }
 

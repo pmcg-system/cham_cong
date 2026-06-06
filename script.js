@@ -31,6 +31,19 @@ function initTabs() {
   const links = document.querySelectorAll('.nav-links li');
   const panes = document.querySelectorAll('.tab-pane');
   const dateSelector = document.querySelector('.date-selector');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  const menuBtn = document.getElementById('mobile-menu-btn');
+
+  // Toggle Sidebar Mobile
+  if (menuBtn && sidebar && overlay) {
+    const toggleMenu = () => {
+      sidebar.classList.toggle('show');
+      overlay.classList.toggle('show');
+    };
+    menuBtn.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
+  }
 
   const switchTab = (tabId) => {
     links.forEach(l => l.classList.remove('active'));
@@ -56,6 +69,12 @@ function initTabs() {
     }
     if (tabId === 'tab-tongquan') {
       renderDashboard();
+    }
+
+    // Đóng sidebar trên mobile sau khi chọn
+    if (sidebar && sidebar.classList.contains('show')) {
+      sidebar.classList.remove('show');
+      if(overlay) overlay.classList.remove('show');
     }
   };
 

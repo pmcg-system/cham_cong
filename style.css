@@ -685,3 +685,86 @@ body.dark-mode .toast {
   color: #fff;
   border: 1px solid #444;
 }
+
+/* --- RESPONSIVE DESIGN (MOBILE / TABLET) --- */
+.mobile-menu-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  color: var(--primary-color);
+  cursor: pointer;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 900;
+  backdrop-filter: blur(2px);
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.sidebar-overlay.show {
+  display: block;
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    height: 100vh;
+    width: 260px;
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+  
+  .sidebar.show {
+    left: 0;
+  }
+  
+  .mobile-menu-btn {
+    display: block;
+  }
+  
+  .top-header {
+    padding: 15px;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .top-header h1 {
+    font-size: 1.5rem !important;
+  }
+  
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .date-selector {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .main-content {
+    height: 100vh;
+  }
+
+  .content-area {
+    padding: 15px;
+  }
+  
+  /* Giữ table cuộn ngang */
+  .table-container {
+    overflow-x: auto;
+  }
+}

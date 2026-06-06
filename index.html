@@ -115,12 +115,20 @@
       </div>
     </aside>
 
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
     <!-- Main Content -->
     <main class="main-content">
       <!-- Header -->
       <header class="top-header">
-        <h1 id="page-title">Bảng Chấm Công</h1>
-        <div style="display: flex; align-items: center; gap: 20px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <button id="mobile-menu-btn" class="mobile-menu-btn">
+            <i class='bx bx-menu'></i>
+          </button>
+          <h1 id="page-title">Bảng Chấm Công</h1>
+        </div>
+        <div class="header-actions" style="display: flex; align-items: center; gap: 20px;">
           <div class="date-selector" id="top-date-selector">
             <label style="font-weight: 600; color: var(--primary-color);">Thời gian:</label>
             <div style="display:flex; align-items:center; gap:8px;">

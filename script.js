@@ -1626,11 +1626,17 @@ function renderDashboard() {
 
   const commonOptions = {
     responsive: true,
+    layout: {
+      padding: {
+        top: 30
+      }
+    },
     scales: {
       y: { 
         beginAtZero: true,
         ticks: { color: textColor },
-        grid: { color: gridColor }
+        grid: { color: gridColor },
+        grace: '5%' // Thêm một chút khoảng trống phía trên cùng trục Y
       },
       x: {
         ticks: { color: textColor },

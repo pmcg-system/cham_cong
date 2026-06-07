@@ -96,13 +96,13 @@
           <i class='bx bx-bar-chart-alt-2'></i>
           <span>Thống Kê Tổng Hợp</span>
         </li>
-        <li data-tab="tab-nhanvien">
-          <i class='bx bx-user-pin'></i>
-          <span>Danh Sách Nhân Viên</span>
-        </li>
         <li data-tab="tab-quy">
           <i class='bx bx-wallet'></i>
           <span>Quản Lý Quỹ Khoa</span>
+        </li>
+        <li data-tab="tab-nhanvien">
+          <i class='bx bx-user-pin'></i>
+          <span>Danh Sách Nhân Viên</span>
         </li>
         <li data-tab="tab-kiemtra">
           <i class='bx bx-check-shield'></i>
@@ -152,9 +152,7 @@
       <!-- TAB: Tổng Quan -->
       <section id="tab-tongquan" class="tab-pane active">
         <div class="card">
-          <div class="card-header">
-            <h3>Tổng Quan Hoạt Động Của Khoa</h3>
-          </div>
+          <!-- Đã bỏ card-header theo yêu cầu -->
           <div style="display: flex; flex-wrap: wrap; gap: 20px; padding: 20px;">
             <div style="flex: 1; min-width: 300px; background: var(--bg-card); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
               <h4 style="text-align: center; color: var(--primary-color); margin-bottom: 10px;">Biểu Đồ Ngày Công Làm Việc</h4>
@@ -171,8 +169,7 @@
       <!-- TAB: Chấm Công -->
       <section id="tab-chamcong" class="tab-pane">
         <div class="card">
-          <div class="card-header">
-            <h3>Chi tiết chấm công tháng</h3>
+          <div class="card-header" style="justify-content: flex-end;">
             <div class="actions">
               <span class="status-indicator" id="sync-status">Đã đồng bộ</span>
             </div>
@@ -194,7 +191,6 @@
         <div class="card">
           <div class="card-header">
             <div style="display:flex; align-items:center; gap:15px;">
-              <h3 style="margin:0;">Báo Cáo Tổng Hợp</h3>
               <select id="thongke-mode" class="input-field" style="padding: 6px 12px; font-weight: 600; color: var(--primary-color); background-color: #f0f4ff; border-color: var(--primary-light);">
                 <option value="current">Theo tháng đang chọn</option>
                 <option value="q1">Quý I (Tháng 1 - 3)</option>
@@ -266,8 +262,7 @@
       <!-- TAB: Nhân viên -->
       <section id="tab-nhanvien" class="tab-pane">
         <div class="card">
-          <div class="card-header">
-            <h3>Danh sách nhân viên</h3>
+          <div class="card-header" style="justify-content: flex-end;">
             <div class="actions">
               <input type="text" id="new-employee-name" placeholder="Tên nhân viên mới..." class="input-field">
               <button class="btn btn-primary" id="btn-add-employee">Thêm</button>
@@ -293,9 +288,7 @@
       <!-- TAB: Quản Lý Quỹ Khoa -->
       <section id="tab-quy" class="tab-pane">
         <div class="card" style="margin-bottom: 20px;">
-          <div class="card-header">
-            <h3>Tổng Quan Quỹ Khoa</h3>
-          </div>
+          <!-- Đã bỏ card-header theo yêu cầu -->
           <div style="display: flex; flex-wrap: wrap; gap: 20px; padding: 20px;">
             <div style="flex: 1; min-width: 200px; background: rgba(76, 201, 240, 0.1); padding: 20px; border-radius: 8px; border-left: 5px solid var(--success-dark); text-align: center;">
               <h4 style="color: var(--text-muted); margin-bottom: 5px; font-weight: 500;">Tổng Thu</h4>
@@ -313,8 +306,7 @@
         </div>
 
         <div class="card">
-          <div class="card-header">
-            <h3>Danh Sách Giao Dịch</h3>
+          <div class="card-header" style="justify-content: flex-end;">
             <div class="actions">
               <button class="btn btn-success" id="btn-export-quy"><i class='bx bx-export'></i> Xuất Báo Cáo Excel</button>
             </div>
@@ -371,9 +363,7 @@
       <!-- TAB: Cài Đặt -->
       <section id="tab-caidat" class="tab-pane">
         <div class="card">
-          <div class="card-header">
-            <h3>Sao Lưu & Khôi Phục Dữ Liệu</h3>
-          </div>
+          <!-- Đã bỏ card-header theo yêu cầu -->
           <div style="padding: 20px;">
             <p style="margin-bottom: 20px; color: var(--text-muted);">
               Tính năng này cho phép bạn tải về toàn bộ dữ liệu của Tháng hiện tại (Bảng Chấm Công và Bảng Thủ Thuật) thành file nén an toàn trên máy tính, phòng ngừa rủi ro mất dữ liệu trên máy chủ Google. 

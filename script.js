@@ -66,6 +66,11 @@ function initTabs() {
       dateSelector.style.display = '';
     }
 
+    const topAddEmployee = document.getElementById('top-add-employee');
+    if (topAddEmployee) {
+      topAddEmployee.style.display = (tabId === 'tab-nhanvien') ? 'flex' : 'none';
+    }
+
     if (tabId === 'tab-thongke') {
       renderThongKeTable();
     }

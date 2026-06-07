@@ -142,6 +142,13 @@
               <input type="number" id="year-picker" min="2020" max="2050" class="input-field" style="width: 90px; padding: 6px; text-align: center; font-weight: bold;">
             </div>
           </div>
+
+          <!-- Add Employee Input (Visible only on NhanVien tab) -->
+          <div id="top-add-employee" style="display: none; align-items: center; gap: 10px;">
+            <input type="text" id="new-employee-name" placeholder="Tên nhân viên mới..." class="input-field" style="height: 40px; min-width: 200px;">
+            <button class="btn btn-primary" id="btn-add-employee" style="height: 40px; white-space: nowrap; padding: 0 15px;">Thêm</button>
+          </div>
+
           <!-- Dark Mode Toggle Button -->
           <button id="theme-toggle" class="btn btn-secondary" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--border-color); color: var(--text-main);" title="Giao diện tối">
             <i class='bx bx-moon' style="font-size: 1.2rem;"></i>
@@ -257,31 +264,21 @@
 
       <!-- TAB: Nhân viên -->
       <section id="tab-nhanvien" class="tab-pane">
-        <div class="card" style="border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
-          <div style="padding: 20px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: flex-end; background-color: #fff;">
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <input type="text" id="new-employee-name" placeholder="Tên nhân viên mới..." class="input-field" style="height: 42px; border: 1px solid #cbd5e1; min-width: 250px; font-size: 0.95rem;">
-              <button class="btn btn-primary" id="btn-add-employee" style="height: 42px; background-color: #3b82f6; border: none; font-weight: 600; display: flex; align-items: center; gap: 5px; padding: 0 20px; border-radius: 6px;">
-                <i class='bx bx-plus'></i> Thêm
-              </button>
-            </div>
-          </div>
-          <div class="table-container" style="max-height: calc(100vh - 250px);">
-            <table class="data-table" style="width: 100%; text-align: left; border-collapse: collapse; margin: 0;">
+        <div class="card">
+          <div class="table-container">
+            <table class="data-table">
               <thead>
-                <tr style="background-color: #f8fafc;">
-                  <th style="padding: 16px 20px; font-weight: 600; font-size: 0.85rem; color: #475569; border-bottom: 1px solid #e2e8f0; border-top: none;">STT</th>
-                  <th style="padding: 16px 20px; font-weight: 600; font-size: 0.85rem; color: #475569; border-bottom: 1px solid #e2e8f0; border-top: none;">Tên Nhân Viên</th>
-                  <th style="padding: 16px 20px; font-weight: 600; font-size: 0.85rem; color: #475569; border-bottom: 1px solid #e2e8f0; border-top: none; text-align: center;">Thao tác</th>
+                <tr>
+                  <th>STT</th>
+                  <th>Tên Nhân Viên</th>
+                  <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody id="nhanvien-body">
               </tbody>
             </table>
           </div>
-          <div style="padding: 15px 25px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
-            <p class="note" style="margin: 0; color: #64748b; font-size: 0.85rem; font-style: italic;">* Danh sách này dùng chung cho toàn bộ ứng dụng và sẽ được lưu tự động cục bộ.</p>
-          </div>
+          <p class="note" style="padding: 15px 24px; margin: 0; border-top: 1px solid var(--border-color);">* Danh sách này dùng chung cho toàn bộ ứng dụng và sẽ được lưu tự động cục bộ.</p>
         </div>
       </section>
 

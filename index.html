@@ -157,6 +157,13 @@
             </button>
           </div>
 
+          <!-- Quy Actions (Visible only on Quy tab) -->
+          <div id="top-quy-actions" style="display: none; align-items: center; gap: 10px;">
+            <button id="btn-export-quy" style="background-color: #f1f5f9; color: #1e293b; border: none; padding: 0 15px; height: 40px; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; white-space: nowrap;">
+              <i class='bx bx-download' style="font-size: 1.2rem;"></i> Xuất File Tổng Hợp
+            </button>
+          </div>
+
           <!-- Dark Mode Toggle Button -->
           <button id="theme-toggle" class="btn btn-secondary" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--border-color); color: var(--text-main);" title="Giao diện tối">
             <i class='bx bx-moon' style="font-size: 1.2rem;"></i>
@@ -292,13 +299,6 @@
 
       <!-- TAB: Quản Lý Quỹ Khoa -->
       <section id="tab-quy" class="tab-pane">
-        <!-- Header -->
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
-          <button id="btn-export-quy" style="background-color: #f1f5f9; color: #1e293b; border: none; padding: 10px 15px; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;">
-            <i class='bx bx-download' style="font-size: 1.2rem;"></i> Xuất File Tổng Hợp
-          </button>
-        </div>
-
         <!-- Cards -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 25px;">
           <!-- Tồn quỹ -->
@@ -337,7 +337,6 @@
 
         <!-- Add Transaction Form (Inline) -->
         <div style="background: #fff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; margin-bottom: 25px;">
-          <h3 style="color: #3b82f6; font-size: 1.2rem; font-weight: 700; margin: 0 0 20px 0;">Thêm Giao Dịch Mới</h3>
           <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
             <div style="flex: 1; min-width: 150px;">
               <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 0.9rem;">Ngày</label>
@@ -375,8 +374,8 @@
                   <th style="padding: 16px 20px; font-weight: 600; font-size: 0.85rem; color: #475569; border-bottom: 1px solid #e2e8f0; border-top: none;">Ngày tháng</th>
                   <th style="padding: 16px 20px; font-weight: 600; font-size: 0.85rem; color: #475569; border-bottom: 1px solid #e2e8f0; border-top: none;">Loại</th>
                   <th style="padding: 16px 20px; font-weight: 600; font-size: 0.85rem; color: #475569; border-bottom: 1px solid #e2e8f0; border-top: none;">Nội dung</th>
-                  <th style="padding: 16px 20px; font-weight: 600; font-size: 0.85rem; color: #475569; border-bottom: 1px solid #e2e8f0; border-top: none; text-align: right;">Số tiền</th>
-                  <th style="padding: 16px 20px; font-weight: 600; font-size: 0.85rem; color: #475569; border-bottom: 1px solid #e2e8f0; border-top: none; text-align: right;">Quỹ còn lại</th>
+                  <th style="padding: 16px 20px; font-weight: 600; font-size: 0.85rem; color: #475569; border-bottom: 1px solid #e2e8f0; border-top: none; text-align: center;">Số tiền</th>
+                  <th style="padding: 16px 20px; font-weight: 600; font-size: 0.85rem; color: #475569; border-bottom: 1px solid #e2e8f0; border-top: none; text-align: center;">Quỹ còn lại</th>
                   <th style="padding: 16px 20px; font-weight: 600; font-size: 0.85rem; color: #475569; border-bottom: 1px solid #e2e8f0; border-top: none; text-align: right;">Thao tác</th>
                 </tr>
               </thead>

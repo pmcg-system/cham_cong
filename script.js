@@ -76,6 +76,11 @@ function initTabs() {
       topAuditActions.style.display = (tabId === 'tab-kiemtra') ? 'flex' : 'none';
     }
 
+    const topQuyActions = document.getElementById('top-quy-actions');
+    if (topQuyActions) {
+      topQuyActions.style.display = (tabId === 'tab-quy') ? 'flex' : 'none';
+    }
+
     if (tabId === 'tab-thongke') {
       renderThongKeTable();
     }
@@ -1969,6 +1974,19 @@ function initQuyKhoa() {
     const today = new Date();
     dateInput.value = today.toISOString().split('T')[0];
   }
+
+  // Allow pressing Enter to add transaction
+  const inputs = ['quy-ngay', 'quy-loai', 'quy-tien', 'quy-noidung'];
+  inputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          addQuyGiaoDich();
+        }
+      });
+    }
+  });
 }
 
 function saveQuyLocally() {
@@ -2021,10 +2039,10 @@ function renderQuyTab() {
         </span>
       </td>
       <td style="white-space: normal; padding: 15px 20px; color: #334155;">${item.noidung}</td>
-      <td style="padding: 15px 20px; text-align: right; font-weight:600; ${item.loai === 'thu' ? 'color:#22c55e;' : 'color:#ef4444;'}">
+      <td style="padding: 15px 20px; text-align: center; font-weight:600; ${item.loai === 'thu' ? 'color:#22c55e;' : 'color:#ef4444;'}">
         ${item.loai === 'thu' ? '+' : '-'}${item.tien.toLocaleString('vi-VN')} đ
       </td>
-      <td style="padding: 15px 20px; text-align: right; font-weight:600; color: #0f172a;">
+      <td style="padding: 15px 20px; text-align: center; font-weight:600; color: #0f172a;">
         ${item.balance.toLocaleString('vi-VN')} đ
       </td>
       <td style="padding: 15px 20px; text-align: right;">

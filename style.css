@@ -770,32 +770,53 @@ body.dark-mode .toast {
     display: block;
   }
   
+  /* --- FIX HEADER --- */
   .top-header {
-    padding: 15px;
+    padding: 15px !important;
     gap: 15px;
-    text-align: center;
   }
   
+  .top-header > div:first-child {
+    width: 100%;
+    justify-content: flex-start !important;
+  }
+
   .top-header h1 {
-    font-size: 1.5rem !important;
+    font-size: 1.3rem !important;
+    margin-left: 10px;
   }
   
   .header-actions {
+    width: 100%;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start !important;
+    gap: 10px !important;
   }
   
   .date-selector {
+    width: 100%;
     flex-wrap: wrap;
+    justify-content: flex-start !important;
+  }
+
+  /* --- FIX CÁC NÚT THÊM/XÓA/XUẤT TRÊN HEADER --- */
+  #top-add-employee, #top-audit-actions, #top-quy-actions {
+    width: 100% !important;
+    flex-direction: column !important;
+  }
+
+  #top-add-employee input, 
+  #top-add-employee button,
+  #top-audit-actions button, 
+  #top-quy-actions button,
+  #btn-export-excel,
+  #excel-file-input + button {
+    width: 100% !important;
     justify-content: center;
   }
   
   .main-content {
     height: 100vh;
-  }
-
-  .content-area {
-    padding: 10px;
   }
   
   .tab-pane {
@@ -805,10 +826,35 @@ body.dark-mode .toast {
   .card {
     margin-bottom: 15px;
   }
-  
+
+  /* --- FIX CÁC FORM BỊ TRÀN DO INLINE CSS (TAB QUỸ, CÀI ĐẶT) --- */
+  /* Ép các flexbox đang nằm ngang thành nằm dọc */
+  div[style*="display: flex; flex-wrap: wrap"],
+  #tab-caidat div[style*="display: flex; gap: 20px"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  div[style*="flex: 1"], 
+  div[style*="flex: 1.5"], 
+  div[style*="flex: 2"] {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  #backup-type {
+    width: 100% !important;
+  }
+
+  /* Xóa thanh gạch dọc trong tab cài đặt trên mobile */
+  #tab-caidat div[style*="width: 1px; height: 40px"] {
+    display: none !important;
+  }
+
+  /* --- BẢNG (TABLE) --- */
   .card-body th, .card-body td, .data-table th, .data-table td {
     padding: 8px 10px;
-    white-space: nowrap; /* Quan trọng: Không cho chữ xuống dòng làm méo bảng */
+    white-space: nowrap; /* Không cho chữ xuống dòng làm méo bảng */
   }
 
   .card-body {
@@ -822,7 +868,6 @@ body.dark-mode .toast {
     padding: 12px 15px !important;
   }
   
-  /* Ghi đè các div con bên trong card-header có style inline */
   .card-header > div {
     flex-wrap: wrap;
     width: 100%;
@@ -833,8 +878,8 @@ body.dark-mode .toast {
     margin-bottom: 5px !important;
   }
 
-  /* Giữ table cuộn ngang */
   .table-container {
-    overflow-x: auto;
+    overflow-x: auto; /* Kéo ngang bảng trên điện thoại */
+    -webkit-overflow-scrolling: touch;
   }
 }

@@ -513,6 +513,19 @@
     <i class='bx bx-loader-alt bx-spin'></i> Đang lưu...
   </div>
 
+  <!-- Reusable Confirm Modal -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
+      <i class='bx bx-error-circle' style="font-size: 4rem; color: #ef4444; margin-bottom: 15px;"></i>
+      <h3 style="margin-bottom: 15px; color: var(--text-main); font-size: 1.2rem;" id="confirm-modal-title">Xác nhận</h3>
+      <p style="color: var(--text-muted); margin-bottom: 25px;" id="confirm-modal-message">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+      <div style="display: flex; gap: 15px; justify-content: center;">
+        <button class="btn btn-secondary" id="btn-confirm-cancel">Hủy</button>
+        <button class="btn btn-danger" id="btn-confirm-ok" style="background-color: #ef4444;">Đồng ý</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 

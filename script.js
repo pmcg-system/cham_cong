@@ -2085,13 +2085,43 @@ function addQuyGiaoDich() {
   document.getElementById('quy-noidung').value = '';
 }
 
+function showConfirmModal(title, message, onConfirm) {
+  const modal = document.getElementById('confirm-modal');
+  const titleEl = document.getElementById('confirm-modal-title');
+  const msgEl = document.getElementById('confirm-modal-message');
+  const btnOk = document.getElementById('btn-confirm-ok');
+  const btnCancel = document.getElementById('btn-confirm-cancel');
+
+  if (!modal || !titleEl || !msgEl || !btnOk || !btnCancel) return;
+
+  titleEl.innerText = title;
+  msgEl.innerText = message;
+  modal.classList.add('show');
+
+  // Gỡ bỏ sự kiện cũ để tránh chạy nhiều lần
+  const newBtnOk = btnOk.cloneNode(true);
+  btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+  
+  const newBtnCancel = btnCancel.cloneNode(true);
+  btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+
+  newBtnCancel.addEventListener('click', () => {
+    modal.classList.remove('show');
+  });
+
+  newBtnOk.addEventListener('click', () => {
+    modal.classList.remove('show');
+    if (typeof onConfirm === 'function') onConfirm();
+  });
+}
+
 function deleteQuyGiaoDich(id) {
-  if (confirm('Bạn có chắc chắn muốn xóa giao dịch này?')) {
+  showConfirmModal('Xóa Giao Dịch', 'Bạn có chắc chắn muốn xóa giao dịch này không? Hành động này không thể hoàn tác.', () => {
     quyData = quyData.filter(item => item.id !== id);
     saveQuyLocally();
     renderQuyTab();
     showToast('Đã xóa giao dịch quỹ');
-  }
+  });
 }
 
 async function exportQuyToExcel() {

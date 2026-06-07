@@ -1184,14 +1184,20 @@ function fetchDataFromServer() {
         chamCongData = res.data.chamcong || {};
         thuThuatData = res.data.thuthuat || {};
 
-        if (Array.isArray(res.data.quykhoa)) {
+        if (Array.isArray(res.data.quykhoa) && res.data.quykhoa.length > 0) {
           quyData = res.data.quykhoa;
           localStorage.setItem('med_quy_khoa', JSON.stringify(quyData));
           if (document.getElementById('tab-quy').classList.contains('active')) renderQuyTab();
+        } else if (quyData && quyData.length > 0) {
+          // Nếu server chưa có dữ liệu nhưng máy hiện tại có, thì tự động đẩy lên server
+          saveQuyLocally();
         }
 
         if (Array.isArray(res.data.employees) && res.data.employees.length > 0) {
           employees = res.data.employees;
+        } else if (employees && employees.length > 0) {
+          // Tương tự cho danh sách nhân viên
+          saveEmployeesLocally();
         }
 
         Object.keys(chamCongData).forEach(emp => {

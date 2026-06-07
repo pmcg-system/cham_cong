@@ -156,18 +156,30 @@ function showLoading(show) {
   else overlay.classList.add('hidden');
 }
 
+let syncStatusTimeout = null;
+
 function updateSyncStatus(status) {
-  const el = document.getElementById('sync-status');
-  el.className = 'status-indicator';
+  const el = document.getElementById('sync-status-popup');
+  if (!el) return;
+  
+  clearTimeout(syncStatusTimeout);
+  el.className = 'sync-status-popup show';
 
   if (status === 'saving') {
     el.classList.add('saving');
-    el.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Đang lưu...";
+    el.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Đang đồng bộ lên máy chủ...";
   } else if (status === 'error') {
     el.classList.add('error');
-    el.innerHTML = "<i class='bx bx-error'></i> Lỗi đồng bộ";
+    el.innerHTML = "<i class='bx bx-error'></i> Lỗi đồng bộ. Hãy kiểm tra kết nối mạng!";
+    syncStatusTimeout = setTimeout(() => {
+      el.classList.remove('show');
+    }, 5000);
   } else {
-    el.innerHTML = "<i class='bx bx-check-circle'></i> Đã đồng bộ";
+    el.classList.add('success');
+    el.innerHTML = "<i class='bx bx-check-circle'></i> Đã đồng bộ thành công";
+    syncStatusTimeout = setTimeout(() => {
+      el.classList.remove('show');
+    }, 3000);
   }
 }
 
@@ -1938,6 +1950,17 @@ function initQuyKhoa() {
   if (btnExport) {
     btnExport.addEventListener('click', exportQuyToExcel);
   }
+
+  const modal = document.getElementById('quy-modal');
+  const btnOpenModal = document.getElementById('btn-open-quy-modal');
+  const btnCloseModal = document.getElementById('btn-close-quy-modal');
+
+  if (btnOpenModal && modal) {
+    btnOpenModal.addEventListener('click', () => modal.classList.add('show'));
+  }
+  if (btnCloseModal && modal) {
+    btnCloseModal.addEventListener('click', () => modal.classList.remove('show'));
+  }
   
   // Set default date to today
   const dateInput = document.getElementById('quy-ngay');
@@ -1960,35 +1983,58 @@ function renderQuyTab() {
   
   tbody.innerHTML = '';
 
-  // Sắp xếp giảm dần theo ngày
-  const sortedData = [...quyData].sort((a, b) => new Date(b.ngay) - new Date(a.ngay));
+  if (quyData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 30px; color: #94a3b8; font-style: italic;">Chưa có dữ liệu thu/chi</td></tr>`;
+    document.getElementById('quy-tong-thu').innerText = '+0 đ';
+    document.getElementById('quy-tong-chi').innerText = '-0 đ';
+    document.getElementById('quy-ton').innerText = '0 đ';
+    return;
+  }
 
-  sortedData.forEach((item, idx) => {
-    if (item.loai === 'thu') tongThu += item.tien;
-    else if (item.loai === 'chi') tongChi += item.tien;
+  // Bước 1: Sắp xếp cũ nhất -> mới nhất để tính Quỹ còn lại (Running Balance)
+  const sortedData = [...quyData].sort((a, b) => new Date(a.ngay) - new Date(b.ngay));
+  
+  let runningBalance = 0;
+  const dataWithBalance = sortedData.map(item => {
+    if (item.loai === 'thu') {
+      tongThu += item.tien;
+      runningBalance += item.tien;
+    } else {
+      tongChi += item.tien;
+      runningBalance -= item.tien;
+    }
+    return { ...item, balance: runningBalance };
+  });
 
+  // Bước 2: Đảo ngược lại mảng để hiển thị cái mới nhất lên trên cùng
+  const reversedData = dataWithBalance.reverse();
+
+  reversedData.forEach((item) => {
     const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid #f1f5f9';
     tr.innerHTML = `
-      <td class="text-center">${idx + 1}</td>
-      <td>${item.ngay}</td>
-      <td class="text-center">
-        <span style="display:inline-block; padding:4px 8px; border-radius:4px; font-size:0.85rem; font-weight:600; color:#fff; background-color: ${item.loai === 'thu' ? 'var(--success-dark)' : 'var(--warning-color)'};">
+      <td style="padding: 15px 20px;">${item.ngay.split('-').reverse().join('/')}</td>
+      <td style="padding: 15px 20px;">
+        <span style="display:inline-block; padding:4px 10px; border-radius:6px; font-size:0.85rem; font-weight:600; ${item.loai === 'thu' ? 'color:#166534; background-color:#dcfce7;' : 'color:#991b1b; background-color:#fee2e2;'}">
           ${item.loai === 'thu' ? 'Thu' : 'Chi'}
         </span>
       </td>
-      <td style="white-space: normal;">${item.noidung}</td>
-      <td class="text-right" style="font-weight:bold; color: ${item.loai === 'thu' ? 'var(--success-dark)' : 'var(--warning-color)'};">
-        ${item.loai === 'thu' ? '+' : '-'}${item.tien.toLocaleString('vi-VN')}
+      <td style="white-space: normal; padding: 15px 20px; color: #334155;">${item.noidung}</td>
+      <td style="padding: 15px 20px; text-align: right; font-weight:600; ${item.loai === 'thu' ? 'color:#22c55e;' : 'color:#ef4444;'}">
+        ${item.loai === 'thu' ? '+' : '-'}${item.tien.toLocaleString('vi-VN')} đ
       </td>
-      <td class="text-center">
-        <button class="btn btn-danger" onclick="deleteQuyGiaoDich('${item.id}')" style="padding: 4px 10px; font-size: 0.8rem; width:100%;"><i class='bx bx-trash'></i> Xóa</button>
+      <td style="padding: 15px 20px; text-align: right; font-weight:600; color: #0f172a;">
+        ${item.balance.toLocaleString('vi-VN')} đ
+      </td>
+      <td style="padding: 15px 20px; text-align: right;">
+        <button class="btn btn-danger" onclick="deleteQuyGiaoDich('${item.id}')" style="background: none; color: #ef4444; padding: 5px; border-radius: 4px; border: 1px solid #fca5a5; font-size: 1.1rem;"><i class='bx bx-trash'></i></button>
       </td>
     `;
     tbody.appendChild(tr);
   });
 
-  document.getElementById('quy-tong-thu').innerText = tongThu.toLocaleString('vi-VN') + ' đ';
-  document.getElementById('quy-tong-chi').innerText = tongChi.toLocaleString('vi-VN') + ' đ';
+  document.getElementById('quy-tong-thu').innerText = '+' + tongThu.toLocaleString('vi-VN') + ' đ';
+  document.getElementById('quy-tong-chi').innerText = '-' + tongChi.toLocaleString('vi-VN') + ' đ';
   document.getElementById('quy-ton').innerText = (tongThu - tongChi).toLocaleString('vi-VN') + ' đ';
 }
 
@@ -2018,6 +2064,7 @@ function addQuyGiaoDich() {
 
   document.getElementById('quy-tien').value = '';
   document.getElementById('quy-noidung').value = '';
+  document.getElementById('quy-modal').classList.remove('show');
 }
 
 function deleteQuyGiaoDich(id) {

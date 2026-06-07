@@ -442,26 +442,48 @@ select.input-field {
   display: none !important;
 }
 
-.status-indicator {
-  font-size: 0.85rem;
-  padding: 4px 10px;
-  background-color: rgba(76, 201, 240, 0.1);
-  color: var(--success-dark);
+/* Sync Status Popup */
+.sync-status-popup {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50px);
+  padding: 8px 16px;
   border-radius: 20px;
   font-weight: 500;
-  display: inline-flex;
+  font-size: 0.9rem;
+  z-index: 1000;
+  display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 
-.status-indicator.saving {
-  background-color: rgba(247, 183, 49, 0.1);
-  color: #f7b731;
+.sync-status-popup.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  visibility: visible;
 }
 
-.status-indicator.error {
-  background-color: rgba(239, 35, 60, 0.1);
-  color: #ef233c;
+.sync-status-popup.saving {
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.sync-status-popup.error {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.sync-status-popup.success {
+  background-color: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
 }
 
 /* Toast */

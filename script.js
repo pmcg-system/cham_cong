@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initEmployeeManager();
   initExcelUploader();
   initExportExcel();
-  initModal();
   initEditModal();
   initErrorChecker();
   initQuyKhoa();
@@ -232,30 +231,6 @@ function saveEmployeesLocally() {
   }
 }
 
-let confirmCallback = null;
-
-function showConfirm(title, message, onConfirm) {
-  document.getElementById('confirm-title').innerText = title;
-  document.getElementById('confirm-message').innerText = message;
-  confirmCallback = onConfirm;
-  document.getElementById('confirm-modal').classList.add('show');
-  
-  // Tự động focus vào nút OK để người dùng có thể ấn Enter ngay lập tức
-  setTimeout(() => {
-    document.getElementById('btn-confirm-ok').focus();
-  }, 100);
-}
-
-function initModal() {
-  document.getElementById('btn-confirm-cancel').addEventListener('click', () => {
-    document.getElementById('confirm-modal').classList.remove('show');
-  });
-  
-  document.getElementById('btn-confirm-ok').addEventListener('click', () => {
-    document.getElementById('confirm-modal').classList.remove('show');
-    if (confirmCallback) confirmCallback();
-  });
-}
 
 function removeEmployee(index) {
   showConfirm('Xác nhận xóa', `Bạn có chắc chắn muốn xóa nhân viên "${employees[index]}"?`, () => {
@@ -2113,7 +2088,7 @@ function addQuyGiaoDich() {
   document.getElementById('quy-noidung').value = '';
 }
 
-function showConfirmModal(title, message, onConfirm) {
+function showConfirm(title, message, onConfirm) {
   const modal = document.getElementById('confirm-modal');
   const titleEl = document.getElementById('confirm-modal-title');
   const msgEl = document.getElementById('confirm-modal-message');
@@ -2141,10 +2116,15 @@ function showConfirmModal(title, message, onConfirm) {
     modal.classList.remove('show');
     if (typeof onConfirm === 'function') onConfirm();
   });
+
+  // Tự động focus vào nút OK để người dùng có thể ấn Enter ngay lập tức
+  setTimeout(() => {
+    newBtnOk.focus();
+  }, 100);
 }
 
 function deleteQuyGiaoDich(id) {
-  showConfirmModal('Xóa Giao Dịch', 'Bạn có chắc chắn muốn xóa giao dịch này không? Hành động này không thể hoàn tác.', () => {
+  showConfirm('Xóa Giao Dịch', 'Bạn có chắc chắn muốn xóa giao dịch này không? Hành động này không thể hoàn tác.', () => {
     quyData = quyData.filter(item => item.id !== id);
     saveQuyLocally();
     renderQuyTab();

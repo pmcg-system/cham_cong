@@ -411,21 +411,39 @@
               <!-- Đơn Giá Thủ Thuật -->
               <div style="flex: 2; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
                 <h4 style="margin-bottom: 15px;"><i class='bx bx-money'></i> Cấu Hình Đơn Giá Thủ Thuật (VNĐ)</h4>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                
+                <h5 style="margin-bottom: 10px; color: var(--text-main);">Giá cũ (Trước 15/07/2026)</h5>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
                   <div>
                     <label style="font-size: 0.9rem; color: var(--text-muted);">Loại 1</label>
-                    <input type="number" id="price-l1" class="input-field" value="37500" style="width: 100px;">
+                    <input type="number" id="price-old-l1" class="input-field" value="37500" style="width: 100px;">
                   </div>
                   <div>
                     <label style="font-size: 0.9rem; color: var(--text-muted);">Loại 2</label>
-                    <input type="number" id="price-l2" class="input-field" value="19500" style="width: 100px;">
+                    <input type="number" id="price-old-l2" class="input-field" value="19500" style="width: 100px;">
                   </div>
                   <div>
                     <label style="font-size: 0.9rem; color: var(--text-muted);">Loại 3</label>
-                    <input type="number" id="price-l3" class="input-field" value="15000" style="width: 100px;">
+                    <input type="number" id="price-old-l3" class="input-field" value="15000" style="width: 100px;">
+                  </div>
+                </div>
+
+                <h5 style="margin-bottom: 10px; color: var(--text-main);">Giá mới (Từ 15/07/2026 trở đi)</h5>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <div>
+                    <label style="font-size: 0.9rem; color: var(--text-muted);">Loại 1</label>
+                    <input type="number" id="price-l1" class="input-field" value="75000" style="width: 100px;">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.9rem; color: var(--text-muted);">Loại 2</label>
+                    <input type="number" id="price-l2" class="input-field" value="39000" style="width: 100px;">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.9rem; color: var(--text-muted);">Loại 3</label>
+                    <input type="number" id="price-l3" class="input-field" value="30000" style="width: 100px;">
                   </div>
                   <div style="display: flex; align-items: flex-end;">
-                    <button class="btn btn-success" id="btn-save-prices">Lưu Đơn Giá</button>
+                    <button class="btn btn-success" id="btn-save-prices" style="background-color: #06b6d4; border-color: #06b6d4;">Lưu Đơn Giá</button>
                   </div>
                 </div>
               </div>

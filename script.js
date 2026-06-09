@@ -632,7 +632,12 @@ function processExcelData(dataRows) {
 
   // Khởi tạo sẵn
   employees.forEach(emp => {
-    tempThuThuatData[emp] = { loai1: 0, loai2: 0, loai3: 0, khac: 0 };
+    tempThuThuatData[emp] = { 
+      loai1: 0, loai2: 0, loai3: 0, 
+      loai1_old: 0, loai2_old: 0, loai3_old: 0, 
+      loai1_new: 0, loai2_new: 0, loai3_new: 0, 
+      khac: 0 
+    };
   });
 
   // Duyệt dữ liệu
@@ -655,10 +660,33 @@ function processExcelData(dataRows) {
 
     if (loaiTT) {
       const strLoai = String(loaiTT).normalize('NFC').toLowerCase();
-      if (strLoai.includes('loại 1')) tempThuThuatData[matchedEmp].loai1++;
-      else if (strLoai.includes('loại 2')) tempThuThuatData[matchedEmp].loai2++;
-      else if (strLoai.includes('loại 3')) tempThuThuatData[matchedEmp].loai3++;
-      else tempThuThuatData[matchedEmp].khac++;
+      
+      let isNewPrice = true; // Mặc định là giá mới nếu không rõ ngày
+      let dateStr = row['AH'] || row['Ngày giờ làm PTTT'] || '';
+      if (dateStr) {
+        const match = String(dateStr).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (match) {
+          const day = parseInt(match[1]);
+          const month = parseInt(match[2]);
+          const year = parseInt(match[3]);
+          const d = new Date(year, month - 1, day);
+          const changeDate = new Date(2026, 6, 15); // 15/07/2026
+          isNewPrice = d >= changeDate;
+        }
+      }
+
+      if (strLoai.includes('loại 1')) {
+        tempThuThuatData[matchedEmp].loai1++;
+        if (isNewPrice) tempThuThuatData[matchedEmp].loai1_new++; else tempThuThuatData[matchedEmp].loai1_old++;
+      } else if (strLoai.includes('loại 2')) {
+        tempThuThuatData[matchedEmp].loai2++;
+        if (isNewPrice) tempThuThuatData[matchedEmp].loai2_new++; else tempThuThuatData[matchedEmp].loai2_old++;
+      } else if (strLoai.includes('loại 3')) {
+        tempThuThuatData[matchedEmp].loai3++;
+        if (isNewPrice) tempThuThuatData[matchedEmp].loai3_new++; else tempThuThuatData[matchedEmp].loai3_old++;
+      } else {
+        tempThuThuatData[matchedEmp].khac++;
+      }
     }
   }
 
@@ -757,6 +785,13 @@ function fetchQuarterData(mode) {
              mergedThuThuat[emp].loai2 += (tt[emp].loai2 || 0);
              mergedThuThuat[emp].loai3 += (tt[emp].loai3 || 0);
              mergedThuThuat[emp].khac += (tt[emp].khac || 0);
+
+             mergedThuThuat[emp].loai1_old = (mergedThuThuat[emp].loai1_old || 0) + (tt[emp].loai1_old || 0);
+             mergedThuThuat[emp].loai1_new = (mergedThuThuat[emp].loai1_new || 0) + (tt[emp].loai1_new || 0);
+             mergedThuThuat[emp].loai2_old = (mergedThuThuat[emp].loai2_old || 0) + (tt[emp].loai2_old || 0);
+             mergedThuThuat[emp].loai2_new = (mergedThuThuat[emp].loai2_new || 0) + (tt[emp].loai2_new || 0);
+             mergedThuThuat[emp].loai3_old = (mergedThuThuat[emp].loai3_old || 0) + (tt[emp].loai3_old || 0);
+             mergedThuThuat[emp].loai3_new = (mergedThuThuat[emp].loai3_new || 0) + (tt[emp].loai3_new || 0);
           });
        }
     });
@@ -994,11 +1029,18 @@ function initExportExcel() {
         });
       };
 
-      // Đọc đơn giá từ Cài Đặt (hoặc mặc định)
-      const priceL1 = parseInt(localStorage.getItem('med_price_l1')) || 37500;
-      const priceL2 = parseInt(localStorage.getItem('med_price_l2')) || 19500;
-      const priceL3 = parseInt(localStorage.getItem('med_price_l3')) || 15000;
+      // Đơn giá mới (từ 15/07/2026) trong cài đặt
+      const priceL1 = parseInt(localStorage.getItem('med_price_l1')) || 75000;
+      const priceL2 = parseInt(localStorage.getItem('med_price_l2')) || 39000;
+      const priceL3 = parseInt(localStorage.getItem('med_price_l3')) || 30000;
+
+      // Đơn giá cũ (trước 15/07/2026) trong cài đặt
+      const priceL1_old = parseInt(localStorage.getItem('med_price_old_l1')) || 37500;
+      const priceL2_old = parseInt(localStorage.getItem('med_price_old_l2')) || 19500;
+      const priceL3_old = parseInt(localStorage.getItem('med_price_old_l3')) || 15000;
+
       let totalL1 = 0, totalL2 = 0, totalL3 = 0;
+      let totalMoneyL1 = 0, totalMoneyL2 = 0, totalMoneyL3 = 0;
 
       // ================= SHEET 1 =================
       const ws1 = workbook.getWorksheet(1);
@@ -1023,23 +1065,39 @@ function initExportExcel() {
           }
           
           if (stats) {
+            let l1_old = stats.loai1_old; let l1_new = stats.loai1_new;
+            if (l1_old === undefined && l1_new === undefined) { l1_old = stats.loai1 || 0; l1_new = 0; }
+            const l1_money = (l1_old || 0) * priceL1_old + (l1_new || 0) * priceL1;
+
+            let l2_old = stats.loai2_old; let l2_new = stats.loai2_new;
+            if (l2_old === undefined && l2_new === undefined) { l2_old = stats.loai2 || 0; l2_new = 0; }
+            const l2_money = (l2_old || 0) * priceL2_old + (l2_new || 0) * priceL2;
+
+            let l3_old = stats.loai3_old; let l3_new = stats.loai3_new;
+            if (l3_old === undefined && l3_new === undefined) { l3_old = stats.loai3 || 0; l3_new = 0; }
+            const l3_money = (l3_old || 0) * priceL3_old + (l3_new || 0) * priceL3;
+
             totalL1 += stats.loai1 || 0;
             totalL2 += stats.loai2 || 0;
             totalL3 += stats.loai3 || 0;
 
+            totalMoneyL1 += l1_money;
+            totalMoneyL2 += l2_money;
+            totalMoneyL3 += l3_money;
+
             if (stats.loai1 > 0) {
               setCellValueSafe(ws1, `C${row1}`, stats.loai1);
-              setCellValueSafe(ws1, `D${row1}`, stats.loai1 * priceL1);
+              setCellValueSafe(ws1, `D${row1}`, l1_money);
             }
             if (stats.loai2 > 0) {
               setCellValueSafe(ws1, `E${row1}`, stats.loai2);
-              setCellValueSafe(ws1, `F${row1}`, stats.loai2 * priceL2);
+              setCellValueSafe(ws1, `F${row1}`, l2_money);
             }
             if (stats.loai3 > 0) {
               setCellValueSafe(ws1, `G${row1}`, stats.loai3);
-              setCellValueSafe(ws1, `H${row1}`, stats.loai3 * priceL3);
+              setCellValueSafe(ws1, `H${row1}`, l3_money);
             }
-            const rowMoney = (stats.loai1 * priceL1) + (stats.loai2 * priceL2) + (stats.loai3 * priceL3);
+            const rowMoney = l1_money + l2_money + l3_money;
             if (rowMoney > 0) setCellValueSafe(ws1, `I${row1}`, rowMoney);
           }
           row1++;
@@ -1047,12 +1105,12 @@ function initExportExcel() {
         
         // Điền tổng cộng ở cuối bảng Sheet 1
         setCellValueSafe(ws1, `C${row1}`, totalL1);
-        setCellValueSafe(ws1, `D${row1}`, totalL1 * priceL1);
+        setCellValueSafe(ws1, `D${row1}`, totalMoneyL1);
         setCellValueSafe(ws1, `E${row1}`, totalL2);
-        setCellValueSafe(ws1, `F${row1}`, totalL2 * priceL2);
+        setCellValueSafe(ws1, `F${row1}`, totalMoneyL2);
         setCellValueSafe(ws1, `G${row1}`, totalL3);
-        setCellValueSafe(ws1, `H${row1}`, totalL3 * priceL3);
-        setCellValueSafe(ws1, `I${row1}`, (totalL1 * priceL1) + (totalL2 * priceL2) + (totalL3 * priceL3));
+        setCellValueSafe(ws1, `H${row1}`, totalMoneyL3);
+        setCellValueSafe(ws1, `I${row1}`, totalMoneyL1 + totalMoneyL2 + totalMoneyL3);
       }
 
       // ================= SHEET 2 =================
@@ -1062,16 +1120,16 @@ function initExportExcel() {
         updateDateInSheet(ws2);
 
         setCellValueSafe(ws2, 'B8', totalL1);
-        setCellValueSafe(ws2, 'D8', totalL1 * priceL1);
+        setCellValueSafe(ws2, 'D8', totalMoneyL1);
 
         setCellValueSafe(ws2, 'B9', totalL2);
-        setCellValueSafe(ws2, 'D9', totalL2 * priceL2);
+        setCellValueSafe(ws2, 'D9', totalMoneyL2);
 
         setCellValueSafe(ws2, 'B10', totalL3);
-        setCellValueSafe(ws2, 'D10', totalL3 * priceL3);
+        setCellValueSafe(ws2, 'D10', totalMoneyL3);
 
         setCellValueSafe(ws2, 'B11', totalL1 + totalL2 + totalL3);
-        setCellValueSafe(ws2, 'D11', (totalL1 * priceL1) + (totalL2 * priceL2) + (totalL3 * priceL3));
+        setCellValueSafe(ws2, 'D11', totalMoneyL1 + totalMoneyL2 + totalMoneyL3);
       }
 
       // ================= SHEET 3 =================
@@ -1097,22 +1155,34 @@ function initExportExcel() {
           }
           
           if (stats) {
-            const rowMoney = (stats.loai1 * priceL1) + (stats.loai2 * priceL2) + (stats.loai3 * priceL3);
+            let l1_old = stats.loai1_old; let l1_new = stats.loai1_new;
+            if (l1_old === undefined && l1_new === undefined) { l1_old = stats.loai1 || 0; l1_new = 0; }
+            const l1_money = (l1_old || 0) * priceL1_old + (l1_new || 0) * priceL1;
+
+            let l2_old = stats.loai2_old; let l2_new = stats.loai2_new;
+            if (l2_old === undefined && l2_new === undefined) { l2_old = stats.loai2 || 0; l2_new = 0; }
+            const l2_money = (l2_old || 0) * priceL2_old + (l2_new || 0) * priceL2;
+
+            let l3_old = stats.loai3_old; let l3_new = stats.loai3_new;
+            if (l3_old === undefined && l3_new === undefined) { l3_old = stats.loai3 || 0; l3_new = 0; }
+            const l3_money = (l3_old || 0) * priceL3_old + (l3_new || 0) * priceL3;
+
+            const rowMoney = l1_money + l2_money + l3_money;
             if (rowMoney > 0) setCellValueSafe(ws3, `I${row3}`, rowMoney);
           }
           row3++;
         }
         
         // Cập nhật tổng tiền Sheet 3
-        setCellValueSafe(ws3, `I${row3}`, (totalL1 * priceL1) + (totalL2 * priceL2) + (totalL3 * priceL3));
+        setCellValueSafe(ws3, `I${row3}`, totalMoneyL1 + totalMoneyL2 + totalMoneyL3);
         
         // Điền tổng tiền bằng chữ vào Sheet 3 (C22)
-        const totalAllMoney = (totalL1 * priceL1) + (totalL2 * priceL2) + (totalL3 * priceL3);
+        const totalAllMoney = totalMoneyL1 + totalMoneyL2 + totalMoneyL3;
         setCellValueSafe(ws3, 'C22', readMoney(totalAllMoney));
       }
       
       // Điền tổng tiền bằng chữ vào Sheet 1 và Sheet 2 (Sheet 3 đã điền ở trên)
-      const totalAllMoney = (totalL1 * priceL1) + (totalL2 * priceL2) + (totalL3 * priceL3);
+      const totalAllMoney = totalMoneyL1 + totalMoneyL2 + totalMoneyL3;
       if (ws1) setCellValueSafe(ws1, 'C25', readMoney(totalAllMoney));
       if (ws2) setCellValueSafe(ws2, 'C13', readMoney(totalAllMoney));
       
@@ -1922,18 +1992,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const inPrice1 = document.getElementById('price-l1');
   const inPrice2 = document.getElementById('price-l2');
   const inPrice3 = document.getElementById('price-l3');
+  
+  const inPriceOld1 = document.getElementById('price-old-l1');
+  const inPriceOld2 = document.getElementById('price-old-l2');
+  const inPriceOld3 = document.getElementById('price-old-l3');
+
   const btnSavePrices = document.getElementById('btn-save-prices');
   
-  if (inPrice1 && inPrice2 && inPrice3 && btnSavePrices) {
-    inPrice1.value = localStorage.getItem('med_price_l1') || 37500;
-    inPrice2.value = localStorage.getItem('med_price_l2') || 19500;
-    inPrice3.value = localStorage.getItem('med_price_l3') || 15000;
+  if (btnSavePrices) {
+    if (inPrice1) inPrice1.value = localStorage.getItem('med_price_l1') || 75000;
+    if (inPrice2) inPrice2.value = localStorage.getItem('med_price_l2') || 39000;
+    if (inPrice3) inPrice3.value = localStorage.getItem('med_price_l3') || 30000;
+
+    if (inPriceOld1) inPriceOld1.value = localStorage.getItem('med_price_old_l1') || 37500;
+    if (inPriceOld2) inPriceOld2.value = localStorage.getItem('med_price_old_l2') || 19500;
+    if (inPriceOld3) inPriceOld3.value = localStorage.getItem('med_price_old_l3') || 15000;
     
     btnSavePrices.addEventListener('click', () => {
-      localStorage.setItem('med_price_l1', inPrice1.value);
-      localStorage.setItem('med_price_l2', inPrice2.value);
-      localStorage.setItem('med_price_l3', inPrice3.value);
-      showToast('Lưu đơn giá thủ thuật thành công!');
+      if (inPrice1) localStorage.setItem('med_price_l1', inPrice1.value);
+      if (inPrice2) localStorage.setItem('med_price_l2', inPrice2.value);
+      if (inPrice3) localStorage.setItem('med_price_l3', inPrice3.value);
+
+      if (inPriceOld1) localStorage.setItem('med_price_old_l1', inPriceOld1.value);
+      if (inPriceOld2) localStorage.setItem('med_price_old_l2', inPriceOld2.value);
+      if (inPriceOld3) localStorage.setItem('med_price_old_l3', inPriceOld3.value);
+
+      showToast('Lưu cấu hình đơn giá thủ thuật thành công!');
     });
   }
 
